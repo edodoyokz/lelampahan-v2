@@ -30,6 +30,12 @@ export default function PartnerLayout({ children }: { children: ReactNode }) {
               Listings
             </Link>
             <Link
+              href="/partner/bookings"
+              className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-lelampahan-cream"
+            >
+              Pesanan
+            </Link>
+            <Link
               href="/partner/scanner"
               className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-lelampahan-cream"
             >
