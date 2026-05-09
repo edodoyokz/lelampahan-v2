@@ -26,7 +26,6 @@ export async function createListingInDb(input: TourListingInput) {
               itinerary: input.tourDetails.itinerary ?? undefined,
               included: input.tourDetails.included ?? undefined,
               excluded: input.tourDetails.excluded ?? undefined,
-              meetingPoint: input.tourDetails.meetingPoint,
             },
           }
         : undefined,
@@ -66,6 +65,34 @@ export async function findListingBySlug(slug: string) {
 export async function listPublishedListings() {
   return prisma.listing.findMany({
     where: { status: 'PUBLISHED' },
+    include: {
+      partner: true,
+      sessions: { where: { status: 'PUBLISHED' }, include: { ticketTypes: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function searchPublishedListingsInDb(input: { q?: string | null; type?: string | null }) {
+  const q = input.q?.trim();
+
+  return prisma.listing.findMany({
+    where: {
+      status: 'PUBLISHED',
+      ...(input.type ? { type: input.type as any } : {}),
+      ...(q
+        ? {
+            OR: [
+              { title: { contains: q, mode: 'insensitive' } },
+              { description: { contains: q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    },
+    include: {
+      partner: true,
+      sessions: { where: { status: 'PUBLISHED' }, include: { ticketTypes: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { issueTicketsAndNotify } from '@/services/ticket-notification';
-import { env } from '@/config/env';
+
+const tokenSecret = 'dev-secret-32-bytes-long-abcdef1234';
 
 vi.mock('@/lib/email', () => ({
   sendTicketEmail: vi.fn().mockResolvedValue({ success: true, messageId: 'email-123' }),
@@ -24,7 +25,7 @@ describe('ticket notification service', () => {
         { name: 'Budi', email: 'budi@example.com', phone: '0811' },
         { name: 'Siti', email: 'siti@example.com', phone: '0812' },
       ],
-      tokenSecret: env.TICKET_TOKEN_SECRET,
+      tokenSecret,
     });
 
     expect(result.tickets).toHaveLength(2);
@@ -37,7 +38,7 @@ describe('ticket notification service', () => {
       orderNumber: 'LM-20260509-EFGH',
       listingTitle: 'Test',
       participants: [],
-      tokenSecret: env.TICKET_TOKEN_SECRET,
+      tokenSecret,
     });
 
     expect(result.tickets).toHaveLength(0);
