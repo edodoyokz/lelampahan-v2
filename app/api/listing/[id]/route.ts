@@ -1,13 +1,22 @@
 import { NextResponse } from 'next/server';
+import { findListingById } from '@/data/listing';
+import { handleApiError } from '@/lib/errors';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(_request: Request, { params }: Props) {
-  const { id } = await params;
-  // Placeholder: will fetch from database
-  return NextResponse.json({ id, title: 'Listing placeholder' });
+  try {
+    const { id } = await params;
+    const listing = await findListingById(id);
+    if (!listing) {
+      return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+    }
+    return NextResponse.json(listing);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function PATCH(request: Request, { params }: Props) {
