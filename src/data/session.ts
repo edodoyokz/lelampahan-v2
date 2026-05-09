@@ -30,3 +30,39 @@ export async function findSessionsByListing(listingId: string) {
     orderBy: { startsAt: 'asc' },
   });
 }
+
+export async function replaceListingSessions(
+  listingId: string,
+  sessions: Array<{
+    startsAt: Date;
+    endsAt: Date;
+    capacity: number;
+    bookingCutoff: Date;
+    ticketTypes: Array<{ name: string; price: number; quota?: number }>;
+  }>,
+) {
+  await prisma.session.deleteMany({ where: { listingId } });
+
+  for (const sessionData of sessions) {
+    const session = await prisma.session.create({
+      data: {
+        listingId,
+        startsAt: sessionData.startsAt,
+        endsAt: sessionData.endsAt,
+        capacity: sessionData.capacity,
+        bookingCutoff: sessionData.bookingCutoff,
+      },
+    });
+
+    for (const ticketType of sessionData.ticketTypes) {
+      await prisma.ticketType.create({
+        data: {
+          sessionId: session.id,
+          name: ticketType.name,
+          price: ticketType.price,
+          quota: ticketType.quota ?? null,
+        },
+      });
+    }
+  }
+}

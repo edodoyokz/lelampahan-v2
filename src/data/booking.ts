@@ -165,6 +165,23 @@ export async function findOrdersByUser(userId: string) {
   });
 }
 
+export async function findOrdersByPartnerId(partnerId: string, status?: string) {
+  return prisma.order.findMany({
+    where: {
+      session: { listing: { partnerId } },
+      ...(status ? { status: status as OrderStatus } : {}),
+    },
+    include: {
+      items: { include: { ticketType: true } },
+      payment: true,
+      participants: true,
+      session: { include: { listing: true } },
+      reservation: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function updateOrderStatus(id: string, status: OrderStatus) {
   return prisma.order.update({
     where: { id },

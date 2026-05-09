@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
 interface TicketType {
@@ -9,33 +9,71 @@ interface TicketType {
   quota: number;
 }
 
+interface SessionData {
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  bookingCutoff: string;
+  ticketTypes: TicketType[];
+}
+
+function emptyTicketType(): TicketType {
+  return { name: 'Regular', price: 50000, quota: 0 };
+}
+
+function emptySession(): SessionData {
+  return {
+    startsAt: '',
+    endsAt: '',
+    capacity: 10,
+    bookingCutoff: '',
+    ticketTypes: [emptyTicketType()],
+  };
+}
+
 export default function SessionsPage() {
   const params = useParams();
   const listingId = params.id as string;
+  const [sessions, setSessions] = useState<SessionData[]>([emptySession()]);
+  const [status, setStatus] = useState<string | null>('Memuat sesi...');
 
-  const [sessions, setSessions] = useState<
-    Array<{
-      startsAt: string;
-      endsAt: string;
-      capacity: number;
-      bookingCutoff: string;
-      ticketTypes: TicketType[];
-    }>
-  >([
-    {
-      startsAt: '',
-      endsAt: '',
-      capacity: 10,
-      bookingCutoff: '',
-      ticketTypes: [{ name: 'Regular', price: 50000, quota: 0 }],
-    },
-  ]);
+  const loadSessions = useCallback(async () => {
+    setStatus('Memuat sesi...');
+    const response = await fetch(`/api/listing/${listingId}/sessions`, { cache: 'no-store' });
+    if (!response.ok) {
+      setStatus('Gagal memuat sesi.');
+      return;
+    }
 
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const data = await response.json();
+    if (data.sessions?.length) {
+      setSessions(
+        data.sessions.map((session: any) => ({
+          startsAt: session.startsAt ? new Date(session.startsAt).toISOString().slice(0, 16) : '',
+          endsAt: session.endsAt ? new Date(session.endsAt).toISOString().slice(0, 16) : '',
+          capacity: session.capacity,
+          bookingCutoff: session.bookingCutoff
+            ? new Date(session.bookingCutoff).toISOString().slice(0, 16)
+            : '',
+          ticketTypes: (session.ticketTypes ?? []).map((tt: any) => ({
+            name: tt.name,
+            price: tt.price,
+            quota: tt.quota ?? 0,
+          })),
+        })),
+      );
+    }
+
+    setStatus('');
+  }, [listingId]);
+
+  useEffect(() => {
+    void loadSessions();
+  }, [loadSessions]);
 
   const addTicketType = (sessionIndex: number) => {
     const updated = [...sessions];
-    updated[sessionIndex].ticketTypes.push({ name: '', price: 0, quota: 0 });
+    updated[sessionIndex].ticketTypes.push(emptyTicketType());
     setSessions(updated);
   };
 
@@ -51,20 +89,35 @@ export default function SessionsPage() {
   };
 
   const addSession = () => {
-    setSessions([
-      ...sessions,
-      {
-        startsAt: '',
-        endsAt: '',
-        capacity: 10,
-        bookingCutoff: '',
-        ticketTypes: [{ name: 'Regular', price: 50000, quota: 0 }],
-      },
-    ]);
+    setSessions([...sessions, emptySession()]);
   };
 
   const handleSave = async () => {
-    setStatusMessage('Disimpan (simulasi) — integrasi API menyusul ✅');
+    setStatus('Menyimpan sesi...');
+    const response = await fetch(`/api/listing/${listingId}/sessions`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessions: sessions.map((s) => ({
+          startsAt: new Date(s.startsAt).toISOString(),
+          endsAt: new Date(s.endsAt).toISOString(),
+          capacity: s.capacity,
+          bookingCutoff: new Date(s.bookingCutoff).toISOString(),
+          ticketTypes: s.ticketTypes.map((tt) => ({
+            name: tt.name,
+            price: tt.price,
+            quota: tt.quota || null,
+          })),
+        })),
+      }),
+    });
+
+    if (!response.ok) {
+      setStatus('Gagal menyimpan sesi.');
+      return;
+    }
+
+    setStatus('Sesi berhasil disimpan ✅');
   };
 
   return (
@@ -73,6 +126,18 @@ export default function SessionsPage() {
       <p className="mt-1 text-sm text-gray-500">
         Listing ID: <code className="text-xs">{listingId}</code>
       </p>
+
+      {status && (
+        <p
+          className={`mt-4 rounded-lg p-3 text-sm ${
+            status.includes('✅')
+              ? 'bg-green-50 text-green-800'
+              : 'bg-blue-50 text-blue-800'
+          }`}
+        >
+          {status}
+        </p>
+      )}
 
       {sessions.map((session, sIdx) => (
         <div key={sIdx} className="mt-6 rounded-lg border bg-white p-6">
@@ -186,7 +251,6 @@ export default function SessionsPage() {
         >
           Simpan Semua
         </button>
-        {statusMessage && <span className="text-sm text-green-700">{statusMessage}</span>}
       </div>
     </div>
   );
