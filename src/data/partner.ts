@@ -1,3 +1,4 @@
+import { PartnerCapabilityType, ReviewStatus } from '@prisma/client';
 import { prisma } from '@/db/prisma';
 import { PartnerRegistrationInput } from '@/domain/partner/validation';
 import { createPartner } from '@/domain/partner/service';
@@ -43,7 +44,8 @@ export async function findPartnerById(id: string) {
 
 export async function listPartners(status?: string) {
   return prisma.partner.findMany({
-    where: status ? { status: status as any } : undefined,
+    where: status ? { status: status as ReviewStatus } : undefined,
+    include: { capabilities: true, bankAccounts: true },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -51,13 +53,13 @@ export async function listPartners(status?: string) {
 export async function updatePartnerStatus(id: string, status: string) {
   return prisma.partner.update({
     where: { id },
-    data: { status: status as any },
+    data: { status: status as ReviewStatus },
   });
 }
 
 export async function updatePartnerCapabilityStatus(partnerId: string, type: string, status: string) {
   return prisma.partnerCapability.update({
-    where: { partnerId_type: { partnerId, type: type as any } },
-    data: { status: status as any },
+    where: { partnerId_type: { partnerId, type: type as PartnerCapabilityType } },
+    data: { status: status as ReviewStatus },
   });
 }

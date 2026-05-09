@@ -1,22 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AdminListing {
   id: string;
   title: string;
-  partnerName: string;
   type: string;
   status: string;
+  partner?: { name: string };
+  _count?: { sessions: number };
 }
 
 export default function AdminListingPage() {
-  const [listings, setListings] = useState<AdminListing[]>([
-    { id: 'l1', title: 'Jelajah Kotagede Heritage', partnerName: 'Jogja Adventure', type: 'TOUR', status: 'PENDING_REVIEW' },
-    { id: 'l2', title: 'Workshop Batik', partnerName: 'Komunitas Seni Jogja', type: 'EVENT', status: 'PENDING_REVIEW' },
-  ]);
+  const [listings, setListings] = useState<AdminListing[]>([]);
+  const [status, setStatus] = useState('Memuat listing...');
+
+  const loadListings = async () => {
+    const response = await fetch('/api/admin/listings', { cache: 'no-store' });
+    if (!response.ok) {
+      setStatus(response.status === 401 || response.status === 403 ? 'Akses admin diperlukan.' : 'Gagal memuat listing.');
+      return;
+    }
+
+    const data = await response.json();
+    setListings(data.listings ?? []);
+    setStatus('');
+  };
+
+  useEffect(() => {
+    void loadListings();
+  }, []);
 
   const handleAction = async (id: string, action: 'approve' | 'reject') => {
+    const response = await fetch('/api/admin/listings/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId: id, action }),
+    });
+
+    if (!response.ok) {
+      setStatus('Gagal menyimpan keputusan review.');
+      return;
+    }
+
     setListings((prev) =>
       prev.map((l) =>
         l.id === id ? { ...l, status: action === 'approve' ? 'PUBLISHED' : 'REJECTED' } : l,
@@ -28,6 +54,7 @@ export default function AdminListingPage() {
     <div>
       <h1 className="text-2xl font-bold text-lelampahan-earth">Listing Review</h1>
       <p className="mt-1 text-sm text-gray-500">Review listing yang menunggu persetujuan.</p>
+      {status && <p className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">{status}</p>}
 
       <div className="mt-6 overflow-hidden rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
@@ -36,6 +63,7 @@ export default function AdminListingPage() {
               <th className="px-6 py-3 font-medium">Judul</th>
               <th className="px-6 py-3 font-medium">Partner</th>
               <th className="px-6 py-3 font-medium">Tipe</th>
+              <th className="px-6 py-3 font-medium">Sesi</th>
               <th className="px-6 py-3 font-medium">Status</th>
               <th className="px-6 py-3 font-medium">Aksi</th>
             </tr>
@@ -44,8 +72,9 @@ export default function AdminListingPage() {
             {listings.map((l) => (
               <tr key={l.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 font-medium text-gray-900">{l.title}</td>
-                <td className="px-6 py-4 text-gray-500">{l.partnerName}</td>
+                <td className="px-6 py-4 text-gray-500">{l.partner?.name ?? '-'}</td>
                 <td className="px-6 py-4 text-gray-500">{l.type}</td>
+                <td className="px-6 py-4 text-gray-500">{l._count?.sessions ?? 0}</td>
                 <td className="px-6 py-4">
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -62,16 +91,10 @@ export default function AdminListingPage() {
                 <td className="px-6 py-4">
                   {l.status === 'PENDING_REVIEW' && (
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleAction(l.id, 'approve')}
-                        className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
-                      >
+                      <button onClick={() => handleAction(l.id, 'approve')} className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700">
                         Publish
                       </button>
-                      <button
-                        onClick={() => handleAction(l.id, 'reject')}
-                        className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
-                      >
+                      <button onClick={() => handleAction(l.id, 'reject')} className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700">
                         Reject
                       </button>
                     </div>
@@ -79,6 +102,9 @@ export default function AdminListingPage() {
                 </td>
               </tr>
             ))}
+            {listings.length === 0 && !status && (
+              <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">Belum ada listing.</td></tr>
+            )}
           </tbody>
         </table>
       </div>

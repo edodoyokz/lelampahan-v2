@@ -70,6 +70,22 @@ export async function listPublishedListings() {
   });
 }
 
+export async function listListingsForAdmin(status?: string) {
+  return prisma.listing.findMany({
+    where: status ? { status: status as ReviewStatus } : undefined,
+    include: { partner: true, _count: { select: { sessions: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function listListingsForPartner(partnerId: string) {
+  return prisma.listing.findMany({
+    where: { partnerId },
+    include: { _count: { select: { sessions: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function updateListingStatus(id: string, status: string) {
   return prisma.listing.update({
     where: { id },
