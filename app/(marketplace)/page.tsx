@@ -1,6 +1,6 @@
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
+    <section className="mx-auto max-w-5xl px-6 py-16">
       <p className="text-sm font-semibold uppercase tracking-[0.3em] text-lelampahan-brick">
         Yogyakarta-first marketplace
       </p>
@@ -8,8 +8,9 @@ export default function HomePage() {
         Lelampahan
       </h1>
       <p className="mt-6 max-w-2xl text-lg leading-8 text-amber-950/80">
-        Platform untuk tour, paket perjalanan, event, tiket QR, dan operasional partner.
+        Temukan tur, paket perjalanan, dan event seru di Yogyakarta.
+        Pesan tiket, dapatkan QR, dan nikmati pengalaman bersama Lelampahan.
       </p>
-    </main>
+    </section>
   );
 }
