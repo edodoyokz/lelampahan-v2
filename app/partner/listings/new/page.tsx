@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type ListingType = 'TOUR' | 'EVENT';
 type BookingMode = 'INSTANT_CONFIRMATION' | 'REQUEST_TO_BOOK';
@@ -19,8 +19,24 @@ export default function NewListingPage() {
   const [sessions, setSessions] = useState<
     Array<{ startsAt: string; endsAt: string; capacity: number; price: number }>
   >([{ startsAt: '', endsAt: '', capacity: 10, price: 50000 }]);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadPartnerContext() {
+      const response = await fetch('/api/partner/me', { cache: 'no-store' });
+      if (!response.ok) {
+        setResult('Akun belum terhubung ke partner.');
+        return;
+      }
+
+      const context = await response.json();
+      setPartnerId(context.partner.id);
+    }
+
+    void loadPartnerContext();
+  }, []);
 
   const addItineraryItem = () => {
     setItinerary([...itinerary, { time: '', activity: '' }]);
@@ -52,7 +68,7 @@ export default function NewListingPage() {
       type,
       description,
       bookingMode,
-      partnerId: 'p1',
+      partnerId,
       timezone: 'Asia/Jakarta',
       tourDetails:
         type === 'TOUR'
@@ -64,6 +80,12 @@ export default function NewListingPage() {
           : undefined,
       eventDetails: type === 'EVENT' ? { venue } : undefined,
     };
+
+    if (!partnerId) {
+      setResult('Akun belum terhubung ke partner.');
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/listing', {
@@ -311,7 +333,7 @@ export default function NewListingPage() {
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !partnerId}
           className="rounded-lg bg-lelampahan-gold px-6 py-3 font-medium text-white hover:bg-lelampahan-brick disabled:opacity-50"
         >
           {submitting ? 'Menyimpan...' : 'Buat Listing'}

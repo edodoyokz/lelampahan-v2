@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { partnerRegistrationSchema } from '@/domain/partner/validation';
-import { createPartnerInDb } from '@/data/partner';
+import { createPartnerInDb, ensurePartnerOwnerMembership } from '@/data/partner';
 import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
@@ -12,6 +12,16 @@ export async function POST(request: Request) {
     const body = await parseBody(request);
     const input = partnerRegistrationSchema.parse(body);
     const partner = await createPartnerInDb(input);
+    await ensurePartnerOwnerMembership({
+      authUserId: auth.user.id,
+      email: auth.user.email ?? input.contactEmail,
+      name:
+        typeof auth.user.user_metadata?.name === 'string'
+          ? auth.user.user_metadata.name
+          : partner.name,
+      partnerId: partner.id,
+    });
+
     return NextResponse.json(partner, { status: 201 });
   } catch (error) {
     return handleApiError(error);

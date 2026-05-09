@@ -11,16 +11,31 @@ interface PartnerListing {
   _count?: { sessions: number };
 }
 
+interface PartnerContext {
+  role: string;
+  partner: { id: string; name: string; status: string };
+}
+
 export default function ListingManagement() {
   const [listings, setListings] = useState<PartnerListing[]>([]);
-  const [partnerId, setPartnerId] = useState('p1');
-  const [status, setStatus] = useState('Masukkan Partner ID lalu muat listing.');
+  const [context, setContext] = useState<PartnerContext | null>(null);
+  const [status, setStatus] = useState('Memuat konteks partner...');
 
   const loadListings = async () => {
+    setStatus('Memuat konteks partner...');
+    const contextResponse = await fetch('/api/partner/me', { cache: 'no-store' });
+    if (!contextResponse.ok) {
+      setStatus(contextResponse.status === 404 ? 'Akun belum terhubung ke partner.' : 'Login partner diperlukan.');
+      return;
+    }
+
+    const partnerContext = await contextResponse.json();
+    setContext(partnerContext);
     setStatus('Memuat listing partner...');
-    const response = await fetch(`/api/partner/${partnerId}/listings`, { cache: 'no-store' });
+
+    const response = await fetch(`/api/partner/${partnerContext.partner.id}/listings`, { cache: 'no-store' });
     if (!response.ok) {
-      setStatus(response.status === 401 ? 'Login diperlukan.' : 'Gagal memuat listing partner.');
+      setStatus('Gagal memuat listing partner.');
       return;
     }
 
@@ -31,7 +46,6 @@ export default function ListingManagement() {
 
   useEffect(() => {
     void loadListings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -39,10 +53,11 @@ export default function ListingManagement() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-lelampahan-earth">Listings</h1>
-          <div className="mt-3 flex items-center gap-2">
-            <input value={partnerId} onChange={(e) => setPartnerId(e.target.value)} className="rounded-lg border px-3 py-2 text-sm" placeholder="Partner ID" />
-            <button onClick={loadListings} className="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-gray-50">Muat</button>
-          </div>
+          {context && (
+            <p className="mt-1 text-sm text-gray-500">
+              {context.partner.name} · {context.role} · {context.partner.status}
+            </p>
+          )}
         </div>
         <Link href="/partner/listings/new" className="rounded-lg bg-lelampahan-gold px-4 py-2 text-sm font-medium text-white hover:bg-lelampahan-brick">
           + Listing Baru
