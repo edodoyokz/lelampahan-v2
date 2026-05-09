@@ -1,0 +1,10 @@
+export default function AdminListingPage() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-lelampahan-earth">Listing Review</h1>
+      <div className="mt-6 rounded-lg bg-white p-8 text-center text-gray-500 shadow-sm">
+        <p>Belum ada listing yang perlu di-review.</p>
+      </div>
+    </div>
+  );
+}
