@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-lelampahan-cream: #FFF7ED;
+  --color-lelampahan-gold: #D97706;
+  --color-lelampahan-brick: #B45309;
+  --color-lelampahan-earth: #431407;
+}
 
 :root {
   color-scheme: light;
