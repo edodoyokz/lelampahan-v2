@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { updatePaymentStatus } from '@/data/payment';
+import { updateOrderStatus } from '@/data/booking';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const webhookSchema = z.object({
   provider: z.string(),
@@ -10,25 +13,25 @@ const webhookSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const body = await parseBody(request);
+    const event = webhookSchema.parse(body);
+
+    await updatePaymentStatus(event.orderId, event.status, event.providerRef, event.eventId);
+
+    if (event.status === 'PAID') {
+      await updateOrderStatus(event.orderId, 'PAID');
+    } else if (event.status === 'EXPIRED') {
+      await updateOrderStatus(event.orderId, 'EXPIRED');
+    }
+
+    return NextResponse.json({
+      received: true,
+      orderId: event.orderId,
+      status: event.status,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return handleApiError(error);
   }
-
-  const parsed = webhookSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid webhook payload' }, { status: 422 });
-  }
-
-  // Placeholder: normalize event and update order status
-  const { orderId, status } = parsed.data;
-
-  return NextResponse.json({
-    received: true,
-    orderId,
-    status,
-    timestamp: new Date().toISOString(),
-  });
 }

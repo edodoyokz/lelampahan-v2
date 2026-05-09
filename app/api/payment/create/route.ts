@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createQrisPayment } from '@/domain/payment/qris-mock';
+import { createPaymentRecord } from '@/data/payment';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const paymentSchema = z.object({
   orderId: z.string().min(1),
@@ -10,24 +12,23 @@ const paymentSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const body = await parseBody(request);
+    const input = paymentSchema.parse(body);
 
-  const parsed = paymentSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Validation failed',
-        details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
-      },
-      { status: 422 },
-    );
-  }
+    const paymentResult = createQrisPayment(input);
 
-  const payment = createQrisPayment(parsed.data);
-  return NextResponse.json(payment, { status: 201 });
+    const persisted = await createPaymentRecord({
+      orderId: input.orderId,
+      provider: paymentResult.provider,
+      method: paymentResult.method,
+      amount: paymentResult.amount,
+      idempotencyKey: input.idempotencyKey,
+      expiresAt: paymentResult.expiresAt,
+    });
+
+    return NextResponse.json(persisted, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

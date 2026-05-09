@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifyTicketToken } from '@/domain/ticket/token';
 import { env } from '@/config/env';
+import { findTicketByCode, recordCheckIn, markTicketCheckedInDb } from '@/data/ticket';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const scanSchema = z.object({
   token: z.string().min(1),
@@ -10,31 +12,38 @@ const scanSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const body = await parseBody(request);
+    const input = scanSchema.parse(body);
 
-  const parsed = scanSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 422 });
-  }
+    const decoded = verifyTicketToken(input.token, env.TICKET_TOKEN_SECRET);
+    const ticket = await findTicketByCode(decoded.ticketCode);
 
-  try {
-    const decoded = verifyTicketToken(parsed.data.token, env.TICKET_TOKEN_SECRET);
-    // Placeholder: validate ticket against database
-    // Placeholder: check sessionId matches, ticket not already checked in
+    if (!ticket) {
+      return NextResponse.json({ valid: false, result: 'INVALID_TICKET' });
+    }
+
+    if (ticket.status === 'CHECKED_IN') {
+      return NextResponse.json({ valid: false, result: 'ALREADY_CHECKED_IN' });
+    }
+
+    await recordCheckIn({
+      ticketId: ticket.id,
+      staffId: input.staffId,
+      result: 'VALID',
+    });
+
+    await markTicketCheckedInDb(ticket.id);
+
     return NextResponse.json({
       valid: true,
       result: 'VALID',
       ticketCode: decoded.ticketCode,
-      ticketId: 'ticket-placeholder',
-      sessionId: parsed.data.sessionId,
+      ticketId: ticket.id,
+      sessionId: input.sessionId,
       checkedInAt: new Date().toISOString(),
     });
-  } catch {
-    return NextResponse.json({ valid: false, result: 'INVALID_TICKET' }, { status: 200 });
+  } catch (error) {
+    return handleApiError(error);
   }
 }

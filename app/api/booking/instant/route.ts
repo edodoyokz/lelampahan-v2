@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createInstantCheckout } from '@/domain/booking/checkout';
 import { generateOrderNumber } from '@/lib/order-number';
+import { createOrder } from '@/data/booking';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const checkoutSchema = z.object({
   userId: z.string().min(1),
@@ -13,32 +15,29 @@ const checkoutSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const body = await parseBody(request);
+    const input = checkoutSchema.parse(body);
+    const orderNumber = generateOrderNumber();
 
-  const parsed = checkoutSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Validation failed',
-        details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
-      },
-      { status: 422 },
-    );
-  }
+    const checkoutOrder = createInstantCheckout({ ...input, orderNumber });
 
-  try {
-    const order = createInstantCheckout({
-      ...parsed.data,
-      orderNumber: generateOrderNumber(),
+    const persisted = await createOrder({
+      orderNumber,
+      userId: input.userId,
+      sessionId: input.sessionId,
+      totalAmount: input.totalAmount,
+      status: checkoutOrder.status,
+      items: checkoutOrder.items.map((item) => ({
+        ticketTypeId: item.ticketTypeId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.subtotal,
+      })),
     });
-    return NextResponse.json(order, { status: 201 });
+
+    return NextResponse.json(persisted, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return handleApiError(error);
   }
 }
