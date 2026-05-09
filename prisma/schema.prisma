@@ -93,6 +93,41 @@ enum CheckInResult {
   INVALID_TICKET
 }
 
+enum LedgerEntryType {
+  CUSTOMER_PAYMENT
+  PLATFORM_FEE
+  PARTNER_PAYABLE
+  REFUND
+  PAYOUT
+}
+
+enum LedgerDirection {
+  DEBIT
+  CREDIT
+}
+
+enum SettlementStatus {
+  OPEN
+  CLOSED
+  PAID
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum RefundRequestStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSING
+  REFUNDED
+  FAILED
+}
+
 model UserProfile {
   id         String   @id @default(cuid())
   authUserId String   @unique
@@ -121,6 +156,9 @@ model Partner {
   memberships  PartnerMembership[]
   listings     Listing[]
   bankAccounts BankAccount[]
+  ledgerEntries LedgerEntry[]
+  settlements   Settlement[]
+  payouts       Payout[]
 }
 
 model PartnerCapability {
@@ -264,9 +302,12 @@ model Order {
   user        UserProfile  @relation(fields: [userId], references: [id])
   session     Session      @relation(fields: [sessionId], references: [id])
   reservation Reservation? @relation(fields: [reservationId], references: [id])
-  items       OrderItem[]
-  payment     Payment?
-  tickets     Ticket[]
+  items        OrderItem[]
+  participants OrderParticipant[]
+  payment        Payment?
+  tickets        Ticket[]
+  ledgerEntries  LedgerEntry[]
+  refundRequests RefundRequest[]
 }
 
 model OrderItem {
@@ -279,6 +320,17 @@ model OrderItem {
 
   order      Order      @relation(fields: [orderId], references: [id])
   ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+}
+
+model OrderParticipant {
+  id        String   @id @default(cuid())
+  orderId   String
+  name      String
+  email     String
+  phone     String
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
 }
 
 model Payment {
@@ -323,4 +375,77 @@ model CheckIn {
   createdAt DateTime      @default(now())
 
   ticket Ticket @relation(fields: [ticketId], references: [id])
+}
+
+model LedgerEntry {
+  id           String          @id @default(cuid())
+  orderId      String
+  partnerId    String
+  settlementId String?
+  type         LedgerEntryType
+  direction    LedgerDirection
+  amount       Int
+  currency     String          @default("IDR")
+  memo         String?
+  createdAt    DateTime        @default(now())
+
+  order      Order       @relation(fields: [orderId], references: [id])
+  partner    Partner     @relation(fields: [partnerId], references: [id])
+  settlement Settlement? @relation(fields: [settlementId], references: [id])
+
+  @@unique([orderId, type])
+}
+
+model Settlement {
+  id        String           @id @default(cuid())
+  partnerId String
+  periodStart DateTime
+  periodEnd   DateTime
+  status    SettlementStatus @default(OPEN)
+  grossAmount Int            @default(0)
+  platformFee Int            @default(0)
+  netAmount   Int            @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+  ledgerEntries LedgerEntry[]
+  payouts Payout[]
+}
+
+model Payout {
+  id           String       @id @default(cuid())
+  partnerId    String
+  settlementId String
+  amount       Int
+  status       PayoutStatus @default(PENDING)
+  providerRef  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  partner    Partner    @relation(fields: [partnerId], references: [id])
+  settlement Settlement @relation(fields: [settlementId], references: [id])
+}
+
+model RefundRequest {
+  id        String              @id @default(cuid())
+  orderId   String
+  requestedByUserId String
+  status    RefundRequestStatus @default(REQUESTED)
+  amount    Int
+  reason    String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
 }

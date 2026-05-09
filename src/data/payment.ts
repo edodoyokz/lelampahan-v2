@@ -1,3 +1,4 @@
+import { PaymentStatus } from '@prisma/client';
 import { prisma } from '@/db/prisma';
 
 export async function createPaymentRecord(data: {
@@ -21,16 +22,18 @@ export async function findPaymentByOrder(orderId: string) {
 
 export async function updatePaymentStatus(
   orderId: string,
-  status: string,
+  status: PaymentStatus,
   providerRef?: string,
   providerEventId?: string,
+  rawPayload?: unknown,
 ) {
   return prisma.payment.update({
     where: { orderId },
     data: {
-      status: status as any,
+      status,
       ...(providerRef ? { providerRef } : {}),
       ...(providerEventId ? { providerEventId } : {}),
+      ...(rawPayload ? { rawPayload: rawPayload as object } : {}),
     },
   });
 }

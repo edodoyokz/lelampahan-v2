@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createTicketToken } from './token';
 
 export interface TicketData {
@@ -12,8 +13,6 @@ export interface TicketData {
   token: string;
 }
 
-let ticketCounter = 1;
-
 export function issueTicket(input: {
   orderId: string;
   code: string;
@@ -22,8 +21,8 @@ export function issueTicket(input: {
   participantPhone: string;
   tokenSecret: string;
 }): TicketData {
-  const id = `ticket-${ticketCounter++}`;
-  const nonce = `n-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  const id = randomUUID();
+  const nonce = randomUUID();
   const token = createTicketToken({ ticketCode: input.code, nonce }, input.tokenSecret);
 
   return {

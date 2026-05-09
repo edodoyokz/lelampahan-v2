@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { canAccessAdminRoute, canAccessPartnerRoute, getUserRole } from '@/lib/auth/roles';
 
 const partnerRoutes = ['/partner'];
 const adminRoutes = ['/admin'];
@@ -40,12 +41,18 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (partnerRoutes.some((route) => pathname.startsWith(route)) && !user) {
+  if (partnerRoutes.some((route) => pathname.startsWith(route)) && !canAccessPartnerRoute(Boolean(user))) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  if (adminRoutes.some((route) => pathname.startsWith(route)) && !user) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+  if (adminRoutes.some((route) => pathname.startsWith(route))) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
+
+    if (!canAccessAdminRoute(getUserRole(user))) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   return supabaseResponse;

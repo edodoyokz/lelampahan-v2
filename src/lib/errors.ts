@@ -21,10 +21,11 @@ export function handleApiError(error: unknown): NextResponse {
   }
 
   if (error instanceof Error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error(error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 
-  return NextResponse.json({ error: 'Unknown error' }, { status: 500 });
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 }
 
 export async function parseBody(request: Request): Promise<unknown> {
