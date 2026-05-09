@@ -23,13 +23,14 @@ describe('env module', () => {
   });
 
   it('throws a readable error when required variables are missing', async () => {
-    process.env = {};
+    process.env = { NODE_ENV: 'test' };
 
     await expect(import('@/config/env')).rejects.toThrow('Missing required environment variable');
   });
 
   it('parses env successfully when all variables are present', async () => {
     process.env = {
+      NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://localhost/test',
       DIRECT_URL: 'postgresql://localhost/test',
       NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',

@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PartnerCapabilityType {
+  TOURS
+  EVENTS
+}
+
+enum ReviewStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ListingType {
+  TOUR
+  EVENT
+}
+
+enum BookingMode {
+  INSTANT_CONFIRMATION
+  REQUEST_TO_BOOK
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  COMPLETED
+  EXPIRED
+  CANCELLED
+  REFUND_REQUESTED
+  REFUND_REJECTED
+  PARTIALLY_REFUNDED
+  REFUNDED
+  NEEDS_ADMIN_REVIEW
+}
+
+enum BookingRequestStatus {
+  REQUESTED
+  PARTNER_APPROVED
+  PARTNER_REJECTED
+  PENDING_PAYMENT
+  PAID
+  COMPLETED
+  EXPIRED
+  PAYMENT_EXPIRED
+  REFUND_REQUESTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  ISSUED
+  CHECKED_IN
+  CANCELLED
+  REFUNDED
+  VOID
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CONSUMED
+  EXPIRED
+  RELEASED
+}
+
+enum CheckInResult {
+  VALID
+  ALREADY_CHECKED_IN
+  WRONG_SCOPE
+  NOT_PAYABLE
+  INVALID_TICKET
+}
+
+model UserProfile {
+  id         String   @id @default(cuid())
+  authUserId String   @unique
+  email      String   @unique
+  name       String?
+  phone      String?
+  role       UserRole @default(CUSTOMER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  memberships PartnerMembership[]
+  orders      Order[]
+}
+
+model Partner {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  description String?
+  status      ReviewStatus @default(PENDING_REVIEW)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  archivedAt  DateTime?
+
+  capabilities PartnerCapability[]
+  memberships  PartnerMembership[]
+  listings     Listing[]
+  bankAccounts BankAccount[]
+}
+
+model PartnerCapability {
+  id        String                @id @default(cuid())
+  partnerId String
+  type      PartnerCapabilityType
+  status    ReviewStatus          @default(PENDING_REVIEW)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+
+  @@unique([partnerId, type])
+}
+
+model PartnerMembership {
+  id        String   @id @default(cuid())
+  partnerId String
+  userId    String
+  role      String
+  createdAt DateTime @default(now())
+
+  partner Partner     @relation(fields: [partnerId], references: [id])
+  user    UserProfile @relation(fields: [userId], references: [id])
+
+  @@unique([partnerId, userId])
+}
+
+model BankAccount {
+  id              String    @id @default(cuid())
+  partnerId       String
+  bankName        String
+  accountNumber   String
+  accountHolder   String
+  activeForPayout Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  archivedAt      DateTime?
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+}
+
+model Listing {
+  id          String       @id @default(cuid())
+  partnerId   String
+  type        ListingType
+  title       String
+  slug        String       @unique
+  description String
+  status      ReviewStatus @default(DRAFT)
+  bookingMode BookingMode
+  timezone    String       @default("Asia/Jakarta")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  archivedAt  DateTime?
+
+  partner     Partner      @relation(fields: [partnerId], references: [id])
+  tourDetail  TourDetail?
+  eventDetail EventDetail?
+  sessions    Session[]
+}
+
+model TourDetail {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  duration  String?
+  itinerary Json?
+  included  Json?
+  excluded  Json?
+
+  listing Listing @relation(fields: [listingId], references: [id])
+}
+
+model EventDetail {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  venue     String?
+  gateNotes String?
+
+  listing Listing @relation(fields: [listingId], references: [id])
+}
+
+model Session {
+  id            String       @id @default(cuid())
+  listingId     String
+  startsAt      DateTime
+  endsAt        DateTime
+  capacity      Int
+  bookingCutoff DateTime
+  status        ReviewStatus @default(PUBLISHED)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  listing      Listing       @relation(fields: [listingId], references: [id])
+  ticketTypes  TicketType[]
+  reservations Reservation[]
+  orders       Order[]
+}
+
+model TicketType {
+  id        String   @id @default(cuid())
+  sessionId String
+  name      String
+  price     Int
+  quota     Int?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session      Session       @relation(fields: [sessionId], references: [id])
+  reservations Reservation[]
+  orderItems   OrderItem[]
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  sessionId    String
+  ticketTypeId String
+  quantity     Int
+  status       ReservationStatus @default(ACTIVE)
+  expiresAt    DateTime
+  createdAt    DateTime          @default(now())
+
+  session    Session    @relation(fields: [sessionId], references: [id])
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+  order      Order?
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  userId        String
+  sessionId     String
+  reservationId String?     @unique
+  status        OrderStatus @default(DRAFT)
+  totalAmount   Int
+  expiresAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user        UserProfile  @relation(fields: [userId], references: [id])
+  session     Session      @relation(fields: [sessionId], references: [id])
+  reservation Reservation? @relation(fields: [reservationId], references: [id])
+  items       OrderItem[]
+  payment     Payment?
+  tickets     Ticket[]
+}
+
+model OrderItem {
+  id           String @id @default(cuid())
+  orderId      String
+  ticketTypeId String
+  quantity     Int
+  unitPrice    Int
+  subtotal     Int
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  provider        String
+  providerRef     String?
+  method          String
+  amount          Int
+  status          PaymentStatus @default(PENDING)
+  idempotencyKey  String        @unique
+  providerEventId String?       @unique
+  rawPayload      Json?
+  expiresAt       DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Ticket {
+  id               String       @id @default(cuid())
+  orderId          String
+  code             String       @unique
+  participantName  String
+  participantEmail String
+  participantPhone String
+  status           TicketStatus @default(ISSUED)
+  checkedInAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  order    Order     @relation(fields: [orderId], references: [id])
+  checkIns CheckIn[]
+}
+
+model CheckIn {
+  id        String        @id @default(cuid())
+  ticketId  String
+  staffId   String
+  result    CheckInResult
+  createdAt DateTime      @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+}
