@@ -1,31 +1,31 @@
 import { NextResponse } from 'next/server';
-import { submitListingForReview } from '@/domain/listing/service';
-import { ListingData } from '@/domain/listing/service';
+import { updateListingStatus } from '@/data/listing';
+import { recordAuditLog } from '@/data/audit';
+import { requireApiUser } from '@/lib/auth/api';
+import { handleApiError } from '@/lib/errors';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(_request: Request, { params }: Props) {
-  const { id } = await params;
-
-  // Placeholder: fetch listing from database, then call domain service
-  const draftListing: ListingData = {
-    title: 'Sample',
-    slug: 'sample',
-    type: 'TOUR',
-    description: 'A sample listing.',
-    bookingMode: 'INSTANT_CONFIRMATION',
-    partnerId: 'p1',
-    timezone: 'Asia/Jakarta',
-    status: 'DRAFT',
-  };
-
+export async function POST(request: Request, { params }: Props) {
   try {
-    const submitted = submitListingForReview(draftListing);
-    return NextResponse.json(submitted);
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
+
+    const { id } = await params;
+    const listing = await updateListingStatus(id, 'PENDING_REVIEW');
+
+    await recordAuditLog({
+      actorUserId: auth.user.id,
+      action: 'listing.submitted',
+      entityType: 'Listing',
+      entityId: id,
+      metadata: { status: 'PENDING_REVIEW' },
+    });
+
+    return NextResponse.json(listing);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return handleApiError(error);
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { listingSchema } from '@/domain/listing/validation';
 import { createListingInDb, listPublishedListings } from '@/data/listing';
+import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 export async function GET() {
@@ -14,6 +15,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
+
     const body = await parseBody(request);
     const input = listingSchema.parse(body);
     const listing = await createListingInDb(input);

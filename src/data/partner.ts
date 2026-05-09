@@ -47,3 +47,17 @@ export async function listPartners(status?: string) {
     orderBy: { createdAt: 'desc' },
   });
 }
+
+export async function updatePartnerStatus(id: string, status: string) {
+  return prisma.partner.update({
+    where: { id },
+    data: { status: status as any },
+  });
+}
+
+export async function updatePartnerCapabilityStatus(partnerId: string, type: string, status: string) {
+  return prisma.partnerCapability.update({
+    where: { partnerId_type: { partnerId, type: type as any } },
+    data: { status: status as any },
+  });
+}

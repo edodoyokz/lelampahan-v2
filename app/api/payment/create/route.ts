@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createQrisPayment } from '@/domain/payment/qris-mock';
 import { createPaymentRecord } from '@/data/payment';
+import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 const paymentSchema = z.object({
@@ -13,6 +14,9 @@ const paymentSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
+
     const body = await parseBody(request);
     const input = paymentSchema.parse(body);
 

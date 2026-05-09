@@ -4,6 +4,7 @@ import { createInstantCheckout } from '@/domain/booking/checkout';
 import { createReservationExpiry } from '@/domain/booking/reservation-policy';
 import { generateOrderNumber } from '@/lib/order-number';
 import { createReservedOrder } from '@/data/booking';
+import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 const participantSchema = z.object({
@@ -24,6 +25,9 @@ const checkoutSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
+
     const body = await parseBody(request);
     const input = checkoutSchema.parse(body);
     const orderNumber = generateOrderNumber();

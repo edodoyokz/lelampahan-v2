@@ -1,3 +1,4 @@
+import { ReviewStatus } from '@prisma/client';
 import { prisma } from '@/db/prisma';
 import { TourListingInput } from '@/domain/listing/validation';
 import { createListingDraft } from '@/domain/listing/service';
@@ -72,6 +73,6 @@ export async function listPublishedListings() {
 export async function updateListingStatus(id: string, status: string) {
   return prisma.listing.update({
     where: { id },
-    data: { status: status as any },
+    data: { status: status as ReviewStatus },
   });
 }

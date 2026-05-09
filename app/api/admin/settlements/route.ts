@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSettlement, listOpenSettlements } from '@/data/settlement';
 import { recordAuditLog } from '@/data/audit';
+import { requireApiAdmin } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 const settlementSchema = z.object({
@@ -14,8 +15,11 @@ const settlementSchema = z.object({
   actorUserId: z.string().min(1).optional(),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const auth = await requireApiAdmin(request);
+    if (auth.response) return auth.response;
+
     const settlements = await listOpenSettlements();
     return NextResponse.json(settlements);
   } catch (error) {
@@ -25,6 +29,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireApiAdmin(request);
+    if (auth.response) return auth.response;
+
     const body = await parseBody(request);
     const input = settlementSchema.parse(body);
     const settlement = await createSettlement({
@@ -37,7 +44,7 @@ export async function POST(request: Request) {
     });
 
     await recordAuditLog({
-      actorUserId: input.actorUserId,
+      actorUserId: auth.user.id,
       action: 'settlement.created',
       entityType: 'Settlement',
       entityId: settlement.id,

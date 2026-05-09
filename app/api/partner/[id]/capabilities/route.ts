@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { updatePartnerCapabilityStatus } from '@/data/partner';
+import { recordAuditLog } from '@/data/audit';
+import { requireApiAdmin } from '@/lib/auth/api';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const actionSchema = z.object({
   type: z.enum(['TOURS', 'EVENTS']),
@@ -11,22 +15,26 @@ interface Props {
 }
 
 export async function POST(request: Request, { params }: Props) {
-  const { id } = await params;
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const auth = await requireApiAdmin(request);
+    if (auth.response) return auth.response;
 
-  const parsed = actionSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 422 });
-  }
+    const { id } = await params;
+    const body = await parseBody(request);
+    const input = actionSchema.parse(body);
+    const status = input.action === 'approve' ? 'APPROVED' : 'REJECTED';
+    const capability = await updatePartnerCapabilityStatus(id, input.type, status);
 
-  return NextResponse.json({
-    partnerId: id,
-    type: parsed.data.type,
-    status: parsed.data.action === 'approve' ? 'APPROVED' : 'REJECTED',
-  });
+    await recordAuditLog({
+      actorUserId: auth.user.id,
+      action: `partner.capability.${input.action}`,
+      entityType: 'PartnerCapability',
+      entityId: capability.id,
+      metadata: { partnerId: id, type: input.type, status },
+    });
+
+    return NextResponse.json(capability);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

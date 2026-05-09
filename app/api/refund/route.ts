@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createRefundRequest, listRefundRequests } from '@/data/refund';
 import { recordAuditLog } from '@/data/audit';
+import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 const refundSchema = z.object({
@@ -11,8 +12,11 @@ const refundSchema = z.object({
   reason: z.string().min(5),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
+
     const refunds = await listRefundRequests();
     return NextResponse.json(refunds);
   } catch (error) {
@@ -22,6 +26,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
+
     const body = await parseBody(request);
     const input = refundSchema.parse(body);
     const refund = await createRefundRequest(input);

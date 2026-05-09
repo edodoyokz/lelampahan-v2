@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { approveListing, rejectListing } from '@/domain/listing/service';
-import { ListingData } from '@/domain/listing/service';
+import { updateListingStatus } from '@/data/listing';
+import { recordAuditLog } from '@/data/audit';
+import { requireApiAdmin } from '@/lib/auth/api';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const actionSchema = z.object({
   action: z.enum(['approve', 'reject']),
@@ -12,37 +14,26 @@ interface Props {
 }
 
 export async function POST(request: Request, { params }: Props) {
-  const { id } = await params;
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const auth = await requireApiAdmin(request);
+    if (auth.response) return auth.response;
 
-  const parsed = actionSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid action' }, { status: 422 });
-  }
+    const { id } = await params;
+    const body = await parseBody(request);
+    const input = actionSchema.parse(body);
+    const status = input.action === 'approve' ? 'PUBLISHED' : 'REJECTED';
+    const listing = await updateListingStatus(id, status);
 
-  // Placeholder: fetch listing from database
-  const pendingListing: ListingData = {
-    title: 'Sample',
-    slug: 'sample',
-    type: 'TOUR',
-    description: 'A sample listing.',
-    bookingMode: 'INSTANT_CONFIRMATION',
-    partnerId: 'p1',
-    timezone: 'Asia/Jakarta',
-    status: 'PENDING_REVIEW',
-  };
+    await recordAuditLog({
+      actorUserId: auth.user.id,
+      action: `listing.${input.action}`,
+      entityType: 'Listing',
+      entityId: id,
+      metadata: { status },
+    });
 
-  try {
-    const result =
-      parsed.data.action === 'approve' ? approveListing(pendingListing) : rejectListing(pendingListing);
-    return NextResponse.json(result);
+    return NextResponse.json(listing);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return handleApiError(error);
   }
 }

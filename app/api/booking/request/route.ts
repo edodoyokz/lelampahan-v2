@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createBookingRequest } from '@/domain/booking/checkout';
 import { generateOrderNumber } from '@/lib/order-number';
+import { requireApiUser } from '@/lib/auth/api';
+import { handleApiError, parseBody } from '@/lib/errors';
 
 const requestSchema = z.object({
   userId: z.string().min(1),
@@ -14,32 +16,19 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const auth = await requireApiUser(request);
+    if (auth.response) return auth.response;
 
-  const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Validation failed',
-        details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
-      },
-      { status: 422 },
-    );
-  }
-
-  try {
+    const body = await parseBody(request);
+    const input = requestSchema.parse(body);
     const booking = createBookingRequest({
-      ...parsed.data,
+      ...input,
       orderNumber: generateOrderNumber(),
     });
+
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return handleApiError(error);
   }
 }
