@@ -49,9 +49,9 @@ describe('SessionPicker', () => {
   });
 
   describe('disables full-capacity sessions', () => {
-    it('shows "Penuh" for sessions with remainingCapacity === 0', () => {
+    it('shows "Kuota penuh" for sessions with remainingCapacity === 0', () => {
       render(<SessionPicker {...defaultProps} />);
-      expect(screen.getByText('Penuh')).toBeInTheDocument();
+      expect(screen.getByText('Kuota penuh')).toBeInTheDocument();
     });
 
     it('disables the button for full sessions', () => {
@@ -127,7 +127,7 @@ describe('SessionPicker', () => {
   describe('empty state', () => {
     it('shows empty message when no sessions are provided', () => {
       render(<SessionPicker sessions={[]} timezone="Asia/Jakarta" onSelect={vi.fn()} />);
-      expect(screen.getByText('Belum ada jadwal tersedia')).toBeInTheDocument();
+      expect(screen.getByText('Jadwal belum tersedia')).toBeInTheDocument();
     });
 
     it('does not render session buttons when empty', () => {

@@ -5,12 +5,12 @@ import { HeroSection } from '@/components/feature/hero-section';
 describe('HeroSection', () => {
   it('renders the main headline', () => {
     render(<HeroSection onSearch={vi.fn()} />);
-    expect(screen.getByRole('heading', { name: /Jelajahi Yogyakarta/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Rasakan Jogja Lewat Pengalaman Lokal/i })).toBeInTheDocument();
   });
 
   it('renders the sub-headline', () => {
     render(<HeroSection onSearch={vi.fn()} />);
-    expect(screen.getByText(/Temukan tour, paket perjalanan/i)).toBeInTheDocument();
+    expect(screen.getByText(/Temukan tur, workshop/i)).toBeInTheDocument();
   });
 
   it('renders the search input', () => {

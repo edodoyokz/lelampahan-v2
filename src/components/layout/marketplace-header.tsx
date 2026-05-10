@@ -10,7 +10,7 @@ export interface MarketplaceHeaderProps {
 }
 
 const navLinks = [
-  { label: 'Home', href: '/' },
+  { label: 'Beranda', href: '/' },
   { label: 'Jelajahi', href: '/' },
   { label: 'Akun Saya', href: '/account' },
 ];
@@ -65,7 +65,7 @@ export function MarketplaceHeader({ user }: MarketplaceHeaderProps) {
             <>
               <Link href="/auth/login">
                 <Button variant="ghost" size="sm">
-                  Login
+                  Masuk
                 </Button>
               </Link>
               <Link href="/auth/register">
@@ -169,7 +169,7 @@ export function MarketplaceHeader({ user }: MarketplaceHeaderProps) {
               <div className="flex flex-col gap-2">
                 <Link href="/auth/login" onClick={() => setDrawerOpen(false)}>
                   <Button variant="secondary" size="sm" className="w-full">
-                    Login
+                    Masuk
                   </Button>
                 </Link>
                 <Link href="/auth/register" onClick={() => setDrawerOpen(false)}>

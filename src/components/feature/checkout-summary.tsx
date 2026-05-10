@@ -136,10 +136,10 @@ export function CheckoutSummary({
                 </svg>
               </div>
               <p className="text-sm font-medium text-gray-900">
-                Waktu pembayaran telah habis
+                Waktu pembayaran habis
               </p>
               <p className="text-xs text-gray-500">
-                QR code sudah tidak berlaku. Silakan buat pembayaran baru.
+                Reservasi Anda sudah tidak aktif. Silakan buat pesanan baru untuk mendapatkan QRIS terbaru.
               </p>
               {onRetry && (
                 <Button variant="primary" size="md" onClick={onRetry}>
@@ -149,18 +149,18 @@ export function CheckoutSummary({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* QR Code Display */}
+              {/* Kode QR Display */}
               <div className="flex justify-center">
                 <div className="w-56 h-56 border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
                   {qrisUrl ? (
                     <img
                       src={qrisUrl}
-                      alt="QRIS QR Code"
+                      alt="QRIS Kode QR"
                       className="w-full h-full object-contain p-2"
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-sm text-gray-400">QR Code</span>
+                      <span className="text-sm text-gray-400">Kode QR</span>
                     </div>
                   )}
                 </div>
@@ -168,7 +168,7 @@ export function CheckoutSummary({
 
               {/* Payment Instructions */}
               <p className="text-xs text-gray-500 text-center">
-                Scan QR code di atas menggunakan aplikasi e-wallet atau mobile banking Anda
+                Pindai kode QRIS di atas menggunakan aplikasi pembayaran Anda. Pastikan nominal sesuai sebelum menyelesaikan pembayaran.
               </p>
 
               {/* Countdown Timer */}

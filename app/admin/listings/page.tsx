@@ -143,14 +143,14 @@ export default function AdminListingPage() {
               size="sm"
               onClick={() => openModal(item, 'approve')}
             >
-              Approve
+              Setujui
             </Button>
             <Button
               variant="destructive"
               size="sm"
               onClick={() => openModal(item, 'reject')}
             >
-              Reject
+              Tolak
             </Button>
           </div>
         ) : null,
@@ -177,14 +177,14 @@ export default function AdminListingPage() {
             size="sm"
             onClick={() => openModal(item, 'approve')}
           >
-            Approve
+            Setujui
           </Button>
           <Button
             variant="destructive"
             size="sm"
             onClick={() => openModal(item, 'reject')}
           >
-            Reject
+            Tolak
           </Button>
         </div>
       )}
@@ -193,9 +193,9 @@ export default function AdminListingPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Listing Review</h1>
+      <h1 className="text-2xl font-bold text-lelampahan-earth">Review Pengalaman</h1>
       <p className="mt-1 text-sm text-gray-500">
-        Review listing yang menunggu persetujuan.
+        Tinjau pengalaman yang menunggu persetujuan.
       </p>
 
       {error && (
@@ -220,17 +220,17 @@ export default function AdminListingPage() {
         onClose={closeModal}
         title={
           modalAction === 'approve'
-            ? 'Konfirmasi Approve'
-            : 'Konfirmasi Reject'
+            ? 'Konfirmasi Persetujuan'
+            : 'Konfirmasi Penolakan'
         }
         description={
           modalAction === 'approve'
-            ? `Apakah Anda yakin ingin meng-approve listing "${selectedListing?.title}"? Listing akan dipublikasikan.`
-            : `Apakah Anda yakin ingin me-reject listing "${selectedListing?.title}"? Listing tidak akan dipublikasikan.`
+            ? `Apakah Anda yakin ingin menyetujui pengalaman "${selectedListing?.title}"? Pengalaman akan tampil di marketplace.`
+            : `Apakah Anda yakin ingin menolak pengalaman "${selectedListing?.title}"? Pengalaman tidak akan dipublikasikan.`
         }
         actions={{
           confirm: {
-            label: modalAction === 'approve' ? 'Approve' : 'Reject',
+            label: modalAction === 'approve' ? 'Setujui' : 'Tolak',
             variant: modalAction === 'approve' ? 'primary' : 'destructive',
             onClick: handleConfirm,
           },

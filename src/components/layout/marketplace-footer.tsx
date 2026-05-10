@@ -9,8 +9,7 @@ export function MarketplaceFooter() {
           <div className="space-y-4">
             <h3 className="text-lg font-bold tracking-tight">Lelampahan</h3>
             <p className="text-sm leading-relaxed text-white/80">
-              Marketplace Yogyakarta-first untuk tour, paket perjalanan, dan
-              event. Temukan pengalaman terbaik di Jogja bersama kami.
+              Marketplace lokal untuk menemukan tur, workshop, dan acara Yogyakarta dari partner terpercaya.
             </p>
           </div>
 
@@ -25,7 +24,7 @@ export function MarketplaceFooter() {
                   href="/"
                   className="text-white/80 transition-colors hover:text-white"
                 >
-                  Home
+                  Beranda
                 </Link>
               </li>
               <li>
@@ -33,7 +32,7 @@ export function MarketplaceFooter() {
                   href="/"
                   className="text-white/80 transition-colors hover:text-white"
                 >
-                  Jelajahi
+                  Jelajahi Pengalaman
                 </Link>
               </li>
               <li>
@@ -41,7 +40,7 @@ export function MarketplaceFooter() {
                   href="/"
                   className="text-white/80 transition-colors hover:text-white"
                 >
-                  Tentang Kami
+                  Tentang Lelampahan
                 </Link>
               </li>
             </ul>

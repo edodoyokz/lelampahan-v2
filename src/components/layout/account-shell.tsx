@@ -38,7 +38,7 @@ const accountNavItems: AccountNavItem[] = [
     ),
   },
   {
-    label: 'Wallet Tiket',
+    label: 'Tiket Saya',
     href: '/account/tickets',
     icon: (
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -22,7 +22,7 @@ export function ListingCard({
   partnerName,
   sessionsCount,
 }: ListingCardProps) {
-  const typeBadgeLabel = type === 'TOUR' ? 'Tour' : 'Event';
+  const typeBadgeLabel = type === 'TOUR' ? 'Tur' : 'Acara';
 
   return (
     <Link

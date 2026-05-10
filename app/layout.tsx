@@ -4,21 +4,21 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_BASE_URL || 'http://localhost:3000'),
   title: {
-    default: 'Lelampahan — Tour & Event Yogyakarta',
+    default: 'Lelampahan — Pengalaman Lokal Yogyakarta',
     template: '%s | Lelampahan',
   },
-  description: 'Marketplace tour, paket perjalanan, dan event Yogyakarta dengan pembayaran QRIS dan tiket QR.',
+  description: 'Temukan tur, workshop, dan acara lokal Yogyakarta dengan booking online, pembayaran QRIS, dan tiket QR.',
   openGraph: {
-    title: 'Lelampahan — Tour & Event Yogyakarta',
-    description: 'Temukan pengalaman wisata, paket perjalanan, dan event lokal Yogyakarta.',
+    title: 'Lelampahan — Pengalaman Lokal Yogyakarta',
+    description: 'Temukan pengalaman lokal Yogyakarta dari partner terpercaya.',
     type: 'website',
     locale: 'id_ID',
     siteName: 'Lelampahan',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lelampahan — Tour & Event Yogyakarta',
-    description: 'Marketplace tour, paket perjalanan, dan event Yogyakarta.',
+    title: 'Lelampahan — Pengalaman Lokal Yogyakarta',
+    description: 'Marketplace pengalaman lokal Yogyakarta.',
   },
 };
 

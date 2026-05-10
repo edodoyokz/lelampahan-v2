@@ -16,7 +16,7 @@ describe('MarketplaceFooter', () => {
 
   it('renders the platform description', () => {
     render(<MarketplaceFooter />);
-    expect(screen.getByText(/Marketplace Yogyakarta/i)).toBeInTheDocument();
+    expect(screen.getByText(/Marketplace lokal/i)).toBeInTheDocument();
   });
 
   it('renders navigation section heading', () => {
@@ -26,9 +26,9 @@ describe('MarketplaceFooter', () => {
 
   it('renders navigation links', () => {
     render(<MarketplaceFooter />);
-    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Jelajahi' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Tentang Kami' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Beranda' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Jelajahi Pengalaman' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tentang Lelampahan' })).toBeInTheDocument();
   });
 
   it('renders contact section heading', () => {

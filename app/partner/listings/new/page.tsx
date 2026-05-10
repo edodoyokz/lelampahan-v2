@@ -178,7 +178,7 @@ export default function NewListingPage() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) newErrors.title = 'Judul listing wajib diisi';
+    if (!title.trim()) newErrors.title = 'Judul pengalaman wajib diisi';
     if (!description.trim()) newErrors.description = 'Deskripsi wajib diisi';
     if (type === 'TOUR' && !duration.trim()) newErrors.duration = 'Durasi wajib diisi untuk tour';
     if (type === 'EVENT' && !venue.trim()) newErrors.venue = 'Venue wajib diisi untuk event';
@@ -241,7 +241,7 @@ export default function NewListingPage() {
       });
 
       if (res.ok) {
-        setResult('Listing berhasil dibuat.');
+        setResult('Pengalaman berhasil dibuat.');
         setTitle('');
         setDescription('');
         setCoverImageFile(null);
@@ -270,7 +270,7 @@ export default function NewListingPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold text-lelampahan-earth md:text-3xl">Buat Listing Baru</h1>
+      <h1 className="text-2xl font-bold text-lelampahan-earth md:text-3xl">Buat Pengalaman Baru</h1>
       <p className="mt-1 text-sm text-gray-500">
         Lengkapi informasi di bawah untuk membuat listing tour atau event baru.
       </p>
@@ -279,11 +279,11 @@ export default function NewListingPage() {
         {/* Section 1: Informasi Dasar */}
         <Card variant="outlined" padding="lg">
           <h2 className="text-lg font-semibold text-lelampahan-earth">Informasi Dasar</h2>
-          <p className="mt-1 text-sm text-gray-500">Detail utama listing Anda.</p>
+          <p className="mt-1 text-sm text-gray-500">Isi informasi utama yang akan dilihat calon peserta.</p>
 
           <div className="mt-6 flex flex-col gap-5">
             <Input
-              label="Judul Listing"
+              label="Judul Pengalaman"
               placeholder="Contoh: Jelajah Kotagede Heritage"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -300,7 +300,7 @@ export default function NewListingPage() {
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Deskripsikan tour atau event Anda secara detail..."
+                placeholder="Ceritakan pengalaman, aktivitas, dan hal penting yang perlu diketahui peserta."
                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-lelampahan-gold/50 focus:border-lelampahan-gold ${
                   errors.description ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -325,14 +325,14 @@ export default function NewListingPage() {
               <p className="text-xs text-gray-500">Opsional. Format JPG, PNG, atau WebP. Maksimal 5MB.</p>
               {coverPreviewUrl && (
                 <div className="aspect-video overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
-                  <img src={coverPreviewUrl} alt="Preview cover listing" className="h-full w-full object-cover" />
+                  <img src={coverPreviewUrl} alt="Preview cover pengalaman" className="h-full w-full object-cover" />
                 </div>
               )}
               {errors.coverImage && <p className="text-sm text-red-600">{errors.coverImage}</p>}
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Tipe Listing</label>
+              <label className="text-sm font-medium text-gray-700">Jenis Pengalaman</label>
               <div className="mt-1 flex gap-3">
                 <button
                   type="button"
@@ -362,7 +362,7 @@ export default function NewListingPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Mode Booking</label>
+              <label className="text-sm font-medium text-gray-700">Cara Booking</label>
               <div className="mt-1 flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -391,8 +391,8 @@ export default function NewListingPage() {
               </div>
               <p className="mt-1 text-xs text-gray-500">
                 {bookingMode === 'INSTANT_CONFIRMATION'
-                  ? 'Pesanan langsung dikonfirmasi tanpa persetujuan manual.'
-                  : 'Pesanan memerlukan persetujuan Anda sebelum dikonfirmasi.'}
+                  ? 'Pesanan otomatis diterima setelah pembayaran berhasil.'
+                  : 'Anda perlu menyetujui pesanan sebelum peserta dapat membayar.'}
               </p>
             </div>
           </div>
@@ -401,12 +401,12 @@ export default function NewListingPage() {
         {/* Section 2: Detail Tour/Event */}
         <Card variant="outlined" padding="lg">
           <h2 className="text-lg font-semibold text-lelampahan-earth">
-            Detail {type === 'TOUR' ? 'Tour' : 'Event'}
+            Detail {type === 'TOUR' ? 'Tur' : 'Acara'}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
             {type === 'TOUR'
-              ? 'Informasi spesifik tentang tour Anda.'
-              : 'Informasi spesifik tentang event Anda.'}
+              ? 'Informasi khusus untuk tur Anda.'
+              : 'Informasi khusus untuk acara Anda.'}
           </p>
 
           <div className="mt-6 flex flex-col gap-5">
@@ -473,7 +473,7 @@ export default function NewListingPage() {
 
             {type === 'EVENT' && (
               <Input
-                label="Venue / Lokasi"
+                label="Lokasi Acara"
                 placeholder="Contoh: Taman Budaya Yogyakarta"
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
@@ -518,9 +518,9 @@ export default function NewListingPage() {
           </div>
         </Card>
 
-        {/* Section 3: Sesi & Harga */}
+        {/* Section 3: Jadwal & Harga */}
         <Card variant="outlined" padding="lg">
-          <h2 className="text-lg font-semibold text-lelampahan-earth">Sesi & Harga</h2>
+          <h2 className="text-lg font-semibold text-lelampahan-earth">Jadwal & Harga</h2>
           <p className="mt-1 text-sm text-gray-500">
             Atur jadwal sesi dan harga tiket untuk listing Anda.
           </p>
@@ -592,7 +592,7 @@ export default function NewListingPage() {
                     {errors[`session-${i}-capacity`] && (
                       <p className="text-sm text-red-600">{errors[`session-${i}-capacity`]}</p>
                     )}
-                    <p className="text-xs text-gray-500">Jumlah maksimal peserta</p>
+                    <p className="text-xs text-gray-500">Kapasitas maksimal peserta</p>
                   </div>
 
                   <div className="flex flex-col gap-1">
@@ -652,7 +652,7 @@ export default function NewListingPage() {
         {result && (
           <div
             className={`rounded-lg p-4 text-sm ${
-              result === 'Listing berhasil dibuat.'
+              result === 'Pengalaman berhasil dibuat.'
                 ? 'border border-green-200 bg-green-50 text-green-800'
                 : 'border border-red-200 bg-red-50 text-red-800'
             }`}

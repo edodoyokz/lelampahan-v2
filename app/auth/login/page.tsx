@@ -8,6 +8,24 @@ import { Button } from '@/components/ui/button';
 
 const supabase = createSupabaseBrowserClient();
 
+function mapAuthError(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('invalid login credentials')) {
+    return 'Email atau kata sandi salah.';
+  }
+
+  if (normalized.includes('email not confirmed')) {
+    return 'Email belum dikonfirmasi. Silakan cek kotak masuk Anda.';
+  }
+
+  if (normalized.includes('already registered') || normalized.includes('user already registered')) {
+    return 'Email ini sudah terdaftar. Silakan masuk.';
+  }
+
+  return message;
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +43,7 @@ export default function LoginPage() {
     });
 
     if (authError) {
-      setError(authError.message);
+      setError(mapAuthError(authError.message));
       setLoading(false);
     } else {
       window.location.href = '/';
@@ -105,7 +123,7 @@ export default function LoginPage() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-lelampahan-earth">Masuk</h2>
             <p className="mt-2 text-sm text-gray-500">
-              Login ke akun Lelampahan Anda untuk melanjutkan.
+              Masuk untuk melihat pesanan, tiket, dan melanjutkan booking Anda.
             </p>
           </div>
 
@@ -121,10 +139,10 @@ export default function LoginPage() {
             />
 
             <Input
-              label="Password"
+              label="Kata sandi"
               type="password"
               required
-              placeholder="Masukkan password"
+              placeholder="Masukkan kata sandi"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

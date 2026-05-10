@@ -32,7 +32,7 @@ const adminNavItems: NavItem[] = [
     ),
   },
   {
-    label: 'Listings',
+    label: 'Pengalaman',
     href: '/admin/listings',
     icon: (
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

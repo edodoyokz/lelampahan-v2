@@ -21,9 +21,9 @@ describe('MarketplaceHeader', () => {
     expect(logo.closest('a')).toHaveAttribute('href', '/');
   });
 
-  it('renders navigation links (Home, Jelajahi, Akun Saya) on desktop', () => {
+  it('renders navigation links (Beranda, Jelajahi, Akun Saya) on desktop', () => {
     render(<MarketplaceHeader />);
-    const homeLinks = screen.getAllByText('Home');
+    const homeLinks = screen.getAllByText('Beranda');
     const jelajahiLinks = screen.getAllByText('Jelajahi');
     const akunLinks = screen.getAllByText('Akun Saya');
 
@@ -32,9 +32,9 @@ describe('MarketplaceHeader', () => {
     expect(akunLinks.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows Login and Daftar buttons when user is null', () => {
+  it('shows Masuk and Daftar buttons when user is null', () => {
     render(<MarketplaceHeader user={null} />);
-    const loginButtons = screen.getAllByText('Login');
+    const loginButtons = screen.getAllByText('Masuk');
     const daftarButtons = screen.getAllByText('Daftar');
 
     expect(loginButtons.length).toBeGreaterThanOrEqual(1);

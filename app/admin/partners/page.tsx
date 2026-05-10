@@ -135,7 +135,7 @@ export default function AdminPartnerPage() {
                   setModalAction({ id: item.id, action: 'approve', name: item.name })
                 }
               >
-                Approve
+                Setujui
               </Button>
               <Button
                 variant="destructive"
@@ -144,7 +144,7 @@ export default function AdminPartnerPage() {
                   setModalAction({ id: item.id, action: 'reject', name: item.name })
                 }
               >
-                Reject
+                Tolak
               </Button>
             </>
           )}
@@ -176,7 +176,7 @@ export default function AdminPartnerPage() {
               setModalAction({ id: item.id, action: 'approve', name: item.name })
             }
           >
-            Approve
+            Setujui
           </Button>
           <Button
             variant="destructive"
@@ -185,7 +185,7 @@ export default function AdminPartnerPage() {
               setModalAction({ id: item.id, action: 'reject', name: item.name })
             }
           >
-            Reject
+            Tolak
           </Button>
         </div>
       )}
@@ -194,8 +194,8 @@ export default function AdminPartnerPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Partner Approval</h1>
-      <p className="mt-1 text-sm text-gray-500">Review dan approve pendaftaran partner baru.</p>
+      <h1 className="text-2xl font-bold text-lelampahan-earth">Persetujuan Partner</h1>
+      <p className="mt-1 text-sm text-gray-500">Tinjau dan setujui pendaftaran partner baru.</p>
 
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
@@ -219,17 +219,17 @@ export default function AdminPartnerPage() {
         onClose={() => setModalAction(null)}
         title={
           modalAction?.action === 'approve'
-            ? 'Approve Partner'
-            : 'Reject Partner'
+            ? 'Setujui Partner'
+            : 'Tolak Partner'
         }
         description={
           modalAction?.action === 'approve'
-            ? `Apakah Anda yakin ingin meng-approve partner "${modalAction?.name ?? ''}"?`
-            : `Apakah Anda yakin ingin me-reject partner "${modalAction?.name ?? ''}"? Tindakan ini tidak dapat dibatalkan.`
+            ? `Apakah Anda yakin ingin menyetujui partner "${modalAction?.name ?? ''}"?`
+            : `Apakah Anda yakin ingin menolak partner "${modalAction?.name ?? ''}"? Tindakan ini tidak dapat dibatalkan.`
         }
         actions={{
           confirm: {
-            label: modalAction?.action === 'approve' ? 'Approve' : 'Reject',
+            label: modalAction?.action === 'approve' ? 'Setujui' : 'Tolak',
             variant: modalAction?.action === 'approve' ? 'primary' : 'destructive',
             onClick: handleAction,
           },

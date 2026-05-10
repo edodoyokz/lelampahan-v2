@@ -69,7 +69,7 @@ const statCards = [
   },
   {
     key: 'totalListings',
-    label: 'Total Listings',
+    label: 'Total Pengalaman',
     icon: ListIcon,
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600',
@@ -78,7 +78,7 @@ const statCards = [
   },
   {
     key: 'pendingReview',
-    label: 'Pending Review',
+    label: 'Menunggu Review',
     icon: ClockIcon,
     iconBg: 'bg-yellow-100',
     iconColor: 'text-yellow-600',
@@ -87,7 +87,7 @@ const statCards = [
   },
   {
     key: 'revenue',
-    label: 'Revenue',
+    label: 'Pendapatan',
     icon: CurrencyIcon,
     iconBg: 'bg-lelampahan-cream',
     iconColor: 'text-lelampahan-gold',
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
           totalPartners,
           totalListings,
           pendingReview,
-          revenue: 0, // Revenue placeholder — no endpoint available yet
+          revenue: 0, // Pendapatan placeholder — no endpoint available yet
         });
       } catch {
         setError('Gagal memuat data dashboard.');

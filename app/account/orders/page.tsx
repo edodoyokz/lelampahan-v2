@@ -28,11 +28,11 @@ const statusLabels: Record<string, string> = {
   COMPLETED: 'Selesai',
   EXPIRED: 'Kedaluwarsa',
   CANCELLED: 'Dibatalkan',
-  REFUND_REQUESTED: 'Refund Diminta',
-  REFUND_REJECTED: 'Refund Ditolak',
-  PARTIALLY_REFUNDED: 'Refund Sebagian',
-  REFUNDED: 'Direfund',
-  NEEDS_ADMIN_REVIEW: 'Review Admin',
+  REFUND_REQUESTED: 'Pengembalian Dana Diajukan',
+  REFUND_REJECTED: 'Pengembalian Dana Ditolak',
+  PARTIALLY_REFUNDED: 'Sebagian Dana Dikembalikan',
+  REFUNDED: 'Dana Dikembalikan',
+  NEEDS_ADMIN_REVIEW: 'Ditinjau Admin',
 };
 
 function formatDate(dateStr: string): string {
@@ -77,7 +77,7 @@ export default function OrderHistoryPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Riwayat Pesanan</h1>
+      <h1 className="text-2xl font-bold text-lelampahan-earth">Pesanan Saya</h1>
 
       <div className="mt-6 space-y-4">
         {loading ? (
@@ -105,8 +105,8 @@ export default function OrderHistoryPage() {
               </svg>
             }
             title="Belum ada pesanan"
-            description="Pesanan Anda akan muncul di sini setelah melakukan pemesanan."
-            action={{ label: 'Jelajahi Listing', href: '/' }}
+            description="Pesanan yang Anda buat akan muncul di sini."
+            action={{ label: 'Jelajahi Pengalaman', href: '/' }}
           />
         ) : (
           orders.map((order) => (

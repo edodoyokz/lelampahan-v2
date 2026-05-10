@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-type ScanResult =
+type PindaiResult =
   | {
       type: 'success';
       participantName: string;
@@ -18,17 +18,17 @@ type ScanResult =
     }
   | null;
 
-export default function ScannerPage() {
-  const [scanResult, setScanResult] = useState<ScanResult>(null);
-  const [scanning, setScanning] = useState(false);
+export default function PindainerPage() {
+  const [scanResult, setPindaiResult] = useState<PindaiResult>(null);
+  const [scanning, setPindaining] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [validating, setValidating] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = async () => {
-    setScanning(true);
-    setScanResult(null);
+    setPindaining(true);
+    setPindaiResult(null);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -40,11 +40,11 @@ export default function ScannerPage() {
         videoRef.current.srcObject = stream;
       }
     } catch {
-      setScanResult({
+      setPindaiResult({
         type: 'error',
         reason: 'Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.',
       });
-      setScanning(false);
+      setPindaining(false);
     }
   };
 
@@ -53,24 +53,24 @@ export default function ScannerPage() {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-    setScanning(false);
+    setPindaining(false);
   };
 
   const handleManualSubmit = async () => {
     if (!manualCode.trim()) return;
 
     setValidating(true);
-    setScanResult(null);
+    setPindaiResult(null);
 
     // Simulate validation — replace with actual API call
     setTimeout(() => {
       if (manualCode.trim().toLowerCase() === 'invalid') {
-        setScanResult({
+        setPindaiResult({
           type: 'error',
           reason: 'Tiket tidak valid atau sudah digunakan.',
         });
       } else {
-        setScanResult({
+        setPindaiResult({
           type: 'success',
           participantName: 'Peserta',
           listingTitle: 'Tour Candi Prambanan',
@@ -83,16 +83,16 @@ export default function ScannerPage() {
   };
 
   const dismissResult = () => {
-    setScanResult(null);
+    setPindaiResult(null);
   };
 
   return (
     <div className="flex flex-col gap-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-lelampahan-earth">Scanner Tiket</h1>
+        <h1 className="text-2xl font-bold text-lelampahan-earth">Pemindai Tiket</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Scan QR tiket peserta untuk check-in.
+          Pindai QR tiket peserta untuk check-in.
         </p>
       </div>
 
@@ -131,12 +131,12 @@ export default function ScannerPage() {
               </svg>
               <p className="text-sm font-medium">Kamera siap digunakan</p>
               <p className="text-xs text-gray-500">
-                Arahkan kamera ke QR code tiket
+                Arahkan kamera ke kode QR tiket peserta
               </p>
             </div>
           )}
 
-          {/* Scan overlay frame when camera is active */}
+          {/* Pindai overlay frame when camera is active */}
           {scanning && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-48 w-48 rounded-2xl border-2 border-white/60" />
@@ -158,7 +158,7 @@ export default function ScannerPage() {
         </div>
       </Card>
 
-      {/* Scan Result Feedback */}
+      {/* Pindai Result Feedback */}
       {scanResult && scanResult.type === 'success' && (
         <div
           className="flex flex-col items-center gap-4 rounded-xl bg-green-50 border border-green-200 p-6 text-center"

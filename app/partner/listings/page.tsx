@@ -20,13 +20,13 @@ interface PartnerContext {
 }
 
 export default function ListingManagement() {
-  const [listings, setListings] = useState<PartnerListing[]>([]);
+  const [listings, setPengalaman] = useState<PartnerListing[]>([]);
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
-  const loadListings = async () => {
+  const loadPengalaman = async () => {
     setLoading(true);
     setError(null);
 
@@ -35,7 +35,7 @@ export default function ListingManagement() {
       setError(
         contextResponse.status === 404
           ? 'Akun belum terhubung ke partner.'
-          : 'Login partner diperlukan.'
+          : 'Masuk sebagai partner diperlukan.'
       );
       setLoading(false);
       return;
@@ -55,7 +55,7 @@ export default function ListingManagement() {
     }
 
     const data = await response.json();
-    setListings(data.listings ?? []);
+    setPengalaman(data.listings ?? []);
     setLoading(false);
   };
 
@@ -66,7 +66,7 @@ export default function ListingManagement() {
         method: 'POST',
       });
       if (response.ok) {
-        await loadListings();
+        await loadPengalaman();
       }
     } finally {
       setSubmittingId(null);
@@ -75,7 +75,7 @@ export default function ListingManagement() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadListings();
+    void loadPengalaman();
   }, []);
 
   const columns: Column<PartnerListing>[] = [
@@ -172,7 +172,7 @@ export default function ListingManagement() {
   if (error) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-lelampahan-earth">Listings</h1>
+        <h1 className="text-2xl font-bold text-lelampahan-earth">Pengalaman</h1>
         <p className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
           {error}
         </p>
@@ -184,7 +184,7 @@ export default function ListingManagement() {
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-lelampahan-earth">Listings</h1>
+          <h1 className="text-2xl font-bold text-lelampahan-earth">Pengalaman</h1>
           {context && (
             <p className="mt-1 text-sm text-gray-500">
               {context.partner.name} · {context.role} · {context.partner.status}
@@ -205,11 +205,11 @@ export default function ListingManagement() {
           loading={loading}
           mobileCardRender={mobileCardRender}
           emptyState={{
-            title: 'Belum ada listing',
+            title: 'Belum ada pengalaman',
             description:
-              'Mulai buat listing pertama Anda untuk menjangkau pelanggan.',
+              'Mulai buat pengalaman pertama Anda untuk menjangkau pelanggan.',
             action: {
-              label: 'Buat Listing Pertama',
+              label: 'Buat Pengalaman Pertama',
               href: '/partner/listings/new',
             },
           }}

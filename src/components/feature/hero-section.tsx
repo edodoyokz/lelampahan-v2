@@ -76,10 +76,10 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-16 md:py-24 text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-lelampahan-earth">
-          Jelajahi Yogyakarta
+          Rasakan Jogja Lewat Pengalaman Lokal
         </h1>
         <p className="mt-3 text-base md:text-lg text-lelampahan-earth/70">
-          Temukan tour, paket perjalanan, dan event terbaik di Jogja
+          Temukan tur, workshop, dan acara lokal terkurasi. Pesan online, bayar mudah dengan QRIS.
         </p>
 
         {/* Search bar */}
@@ -90,7 +90,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           <div className="flex-1">
             <Input
               label=""
-              placeholder="Cari tour, event, atau destinasi..."
+              placeholder="Cari Kotagede, batik, kuliner, Prambanan..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Cari listing"

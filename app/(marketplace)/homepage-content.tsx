@@ -9,8 +9,8 @@ import { CalendarDays, Compass, LayoutGrid, Search } from 'lucide-react';
 
 const categories: Category[] = [
   { label: 'Semua', value: '', icon: <LayoutGrid className="h-5 w-5" strokeWidth={1.8} /> },
-  { label: 'Tour', value: 'TOUR', icon: <Compass className="h-5 w-5" strokeWidth={1.8} /> },
-  { label: 'Event', value: 'EVENT', icon: <CalendarDays className="h-5 w-5" strokeWidth={1.8} /> },
+  { label: 'Tur', value: 'TOUR', icon: <Compass className="h-5 w-5" strokeWidth={1.8} /> },
+  { label: 'Acara', value: 'EVENT', icon: <CalendarDays className="h-5 w-5" strokeWidth={1.8} /> },
 ];
 
 interface MarketplaceHomepageContentProps {
@@ -63,7 +63,7 @@ export function MarketplaceHomepageContent({ listings }: MarketplaceHomepageCont
         />
       </section>
 
-      {/* Listings Grid */}
+      {/* Pengalaman Grid */}
       <section className="mt-8" aria-label="Daftar listing">
         {filteredListings.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -76,11 +76,11 @@ export function MarketplaceHomepageContent({ listings }: MarketplaceHomepageCont
             illustration={
               <Search className="h-12 w-12 text-gray-400" strokeWidth={1.6} aria-hidden="true" />
             }
-            title="Tidak ada listing ditemukan"
+            title="Belum ketemu pengalaman yang cocok"
             description={
               searchQuery || activeCategory
-                ? 'Coba ubah kata kunci pencarian atau kategori yang dipilih.'
-                : 'Belum ada listing yang tersedia saat ini.'
+                ? 'Coba kata kunci lain atau lihat semua kategori yang tersedia.'
+                : 'Belum ada pengalaman yang tersedia saat ini.'
             }
             action={
               searchQuery || activeCategory

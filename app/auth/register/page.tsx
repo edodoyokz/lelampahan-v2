@@ -8,6 +8,24 @@ import { Button } from '@/components/ui/button';
 
 const supabase = createSupabaseBrowserClient();
 
+function mapAuthError(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('invalid login credentials')) {
+    return 'Email atau kata sandi salah.';
+  }
+
+  if (normalized.includes('email not confirmed')) {
+    return 'Email belum dikonfirmasi. Silakan cek kotak masuk Anda.';
+  }
+
+  if (normalized.includes('already registered') || normalized.includes('user already registered')) {
+    return 'Email ini sudah terdaftar. Silakan masuk.';
+  }
+
+  return message;
+}
+
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,12 +40,12 @@ export default function RegisterPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError('Password dan konfirmasi password tidak cocok.');
+      setError('Kata sandi dan konfirmasi kata sandi tidak cocok.');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password minimal 6 karakter.');
+      setError('Kata sandi minimal 6 karakter.');
       return;
     }
 
@@ -45,7 +63,7 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message);
+      setError(mapAuthError(authError.message));
     } else {
       setSuccess(true);
     }
@@ -77,7 +95,7 @@ export default function RegisterPage() {
             href="/auth/login"
             className="mt-6 inline-block text-sm font-medium text-lelampahan-gold hover:text-lelampahan-brick"
           >
-            Kembali ke halaman login
+            Kembali ke halaman masuk
           </Link>
         </div>
       </main>
@@ -137,7 +155,7 @@ export default function RegisterPage() {
         <div className="mx-auto w-full max-w-md">
           <h1 className="text-3xl font-bold text-lelampahan-earth">Buat Akun</h1>
           <p className="mt-2 text-sm text-gray-500">
-            Daftar untuk mulai menjelajahi Yogyakarta.
+            Daftar untuk mulai memesan pengalaman lokal Yogyakarta.
           </p>
 
           <form onSubmit={handleRegister} className="mt-8 flex flex-col gap-4">
@@ -162,7 +180,7 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Password"
+              label="Kata sandi"
               id="password"
               type="password"
               required
@@ -173,11 +191,11 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Konfirmasi Password"
+              label="Konfirmasi kata sandi"
               id="confirm-password"
               type="password"
               required
-              placeholder="Ulangi password"
+              placeholder="Ulangi kata sandi"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
@@ -205,7 +223,7 @@ export default function RegisterPage() {
               href="/auth/login"
               className="font-medium text-lelampahan-gold hover:text-lelampahan-brick"
             >
-              Login
+              Masuk
             </Link>
           </p>
         </div>

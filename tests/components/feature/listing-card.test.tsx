@@ -46,14 +46,14 @@ describe('ListingCard', () => {
     expect(screen.getByText('Lihat detail')).toBeInTheDocument();
   });
 
-  it('renders type badge for Tour', () => {
+  it('renders type badge for Tur', () => {
     render(<ListingCard {...baseProps} />);
-    expect(screen.getByText('Tour')).toBeInTheDocument();
+    expect(screen.getByText('Tur')).toBeInTheDocument();
   });
 
-  it('renders type badge for Event', () => {
+  it('renders type badge for Acara', () => {
     render(<ListingCard {...baseProps} type="EVENT" />);
-    expect(screen.getByText('Event')).toBeInTheDocument();
+    expect(screen.getByText('Acara')).toBeInTheDocument();
   });
 
   it('links to correct slug (/l/{slug})', () => {

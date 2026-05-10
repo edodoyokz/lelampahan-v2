@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const listing = await findListingBySlug(slug).catch(() => null);
 
   if (!listing) {
-    return { title: 'Listing tidak ditemukan' };
+    return { title: 'Pengalaman tidak ditemukan' };
   }
 
   const coverImage = (listing.images as ListingImageForDisplay[] | undefined)?.find((image) => image.isCover) ??
@@ -93,7 +93,7 @@ export default async function ListingDetailPage({ params }: Props) {
     notFound();
   }
 
-  const typeLabel = listing.type === 'TOUR' ? 'Tour' : 'Event';
+  const typeLabel = listing.type === 'TOUR' ? 'Tur' : 'Acara';
   const typeBadgeStatus = listing.type === 'TOUR' ? 'info' : 'warning';
   const itineraryItems = normalizeItinerary(listing.tourDetail?.itinerary);
   const includedItems = normalizeStringList(listing.tourDetail?.included);
@@ -128,7 +128,7 @@ export default async function ListingDetailPage({ params }: Props) {
           <ol className="flex items-center gap-2">
             <li>
               <Link href="/" className="hover:text-lelampahan-gold transition-colors">
-                Home
+                Beranda
               </Link>
             </li>
             <li aria-hidden="true">
@@ -153,7 +153,7 @@ export default async function ListingDetailPage({ params }: Props) {
         </nav>
 
         {/* Image Gallery Section */}
-        <section aria-label="Galeri gambar listing">
+        <section aria-label="Galeri gambar pengalaman">
           <div className="aspect-video w-full rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
             {imageUrl ? (
               <img src={imageUrl} alt={coverImage?.alt ?? listing.title} className="h-full w-full object-cover" />
@@ -162,7 +162,7 @@ export default async function ListingDetailPage({ params }: Props) {
                 <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
                 </svg>
-                <p className="mt-2 text-sm">Belum ada gambar</p>
+                <p className="mt-2 text-sm">Gambar belum tersedia</p>
               </div>
             )}
           </div>
@@ -203,18 +203,18 @@ export default async function ListingDetailPage({ params }: Props) {
 
             {/* Description */}
             <Card variant="outlined" padding="md">
-              <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Deskripsi</h2>
+              <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Tentang Pengalaman Ini</h2>
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                 {listing.description}
               </p>
             </Card>
 
-            {/* Tour Details - Itinerary, Included, Excluded */}
+            {/* Tour Details - Rencana Perjalanan, Included, Excluded */}
             {listing.tourDetail && (
               <div className="space-y-4">
                 {itineraryItems.length > 0 && (
                   <Card variant="outlined" padding="md">
-                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Itinerary</h2>
+                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Rencana Perjalanan</h2>
                     <ol className="space-y-4">
                       {itineraryItems.map((item, index) => (
                         <li key={`${item.time ?? 'step'}-${index}`} className="relative flex gap-4">
@@ -273,7 +273,7 @@ export default async function ListingDetailPage({ params }: Props) {
             {/* Event Details - Gate Notes */}
             {listing.eventDetail?.gateNotes && (
               <Card variant="outlined" padding="md">
-                <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Informasi Gate</h2>
+                <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Informasi Kedatangan</h2>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {listing.eventDetail.gateNotes}
                 </p>
@@ -285,11 +285,11 @@ export default async function ListingDetailPage({ params }: Props) {
           <div className="space-y-6">
             {/* Session Picker */}
             <Card variant="elevated" padding="md">
-              <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Jadwal Tersedia</h2>
+              <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Pilih Jadwal</h2>
               {sessionsForPicker.length === 0 ? (
                 <EmptyState
-                  title="Belum ada jadwal tersedia"
-                  description="Jadwal untuk listing ini belum tersedia. Silakan cek kembali nanti."
+                  title="Jadwal belum tersedia"
+                  description="Penyelenggara belum membuka jadwal untuk pengalaman ini. Silakan cek kembali nanti."
                   illustration={
                     <svg className="h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -307,7 +307,7 @@ export default async function ListingDetailPage({ params }: Props) {
             {/* Partner/Organizer Info */}
             <Card variant="outlined" padding="md">
               <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">
-                {listing.type === 'TOUR' ? 'Penyelenggara Tour' : 'Penyelenggara Event'}
+                {listing.type === 'TOUR' ? 'Penyelenggara Tur' : 'Penyelenggara Acara'}
               </h2>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-lelampahan-gold/10 flex items-center justify-center">

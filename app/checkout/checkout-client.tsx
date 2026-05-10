@@ -66,7 +66,7 @@ export function CheckoutClient() {
     if (!sessionId || !ticketTypeId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setState("error");
-      setErrorMessage("Parameter sesi atau tipe tiket tidak ditemukan di URL.");
+      setErrorMessage("Data pesanan tidak lengkap. Silakan pilih jadwal dan tiket kembali.");
       return;
     }
 
@@ -77,7 +77,7 @@ export function CheckoutClient() {
         );
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error ?? "Gagal memuat data sesi");
+          throw new Error(data.error ?? "Gagal memuat data jadwal");
         }
         const data: SessionData = await res.json();
         setSessionData(data);
@@ -126,7 +126,7 @@ export function CheckoutClient() {
         newErrors[`${i}-email`] = "Format email tidak valid";
       }
       if (!p.phone.trim()) {
-        newErrors[`${i}-phone`] = "Nomor HP wajib diisi";
+        newErrors[`${i}-phone`] = "Nomor WhatsApp wajib diisi";
       }
     });
 
@@ -162,7 +162,7 @@ export function CheckoutClient() {
 
       if (!bookingRes.ok) {
         const err = await bookingRes.json();
-        throw new Error(err.error ?? "Gagal membuat reservasi");
+        throw new Error(err.error ?? "Gagal membuat reservasi. Silakan coba lagi.");
       }
 
       const order = await bookingRes.json();
@@ -181,7 +181,7 @@ export function CheckoutClient() {
 
       if (!paymentRes.ok) {
         const err = await paymentRes.json();
-        throw new Error(err.error ?? "Gagal membuat pembayaran QRIS");
+        throw new Error(err.error ?? "Gagal membuat pembayaran QRIS. Silakan coba lagi.");
       }
 
       const payment = await paymentRes.json();
@@ -218,7 +218,7 @@ export function CheckoutClient() {
 
       if (!paymentRes.ok) {
         const err = await paymentRes.json();
-        throw new Error(err.error ?? "Gagal membuat pembayaran baru");
+        throw new Error(err.error ?? "Gagal membuat QRIS baru. Silakan coba lagi.");
       }
 
       const payment = await paymentRes.json();
@@ -228,7 +228,7 @@ export function CheckoutClient() {
     } catch (err) {
       setState("error");
       setErrorMessage(
-        err instanceof Error ? err.message : "Gagal membuat pembayaran baru"
+        err instanceof Error ? err.message : "Gagal membuat QRIS baru. Silakan coba lagi."
       );
     }
   }, [orderId, orderNumber]);
@@ -343,7 +343,7 @@ export function CheckoutClient() {
             </p>
             <div className="flex gap-3 justify-center">
               <Button variant="secondary" size="sm" onClick={handleBackToForm}>
-                Coba Lagi
+                Coba lagi
               </Button>
               <Button
                 variant="ghost"
@@ -373,7 +373,7 @@ export function CheckoutClient() {
                     </p>
                   )}
                   <Input
-                    label="Nama Lengkap"
+                    label="Nama lengkap"
                     placeholder="Masukkan nama lengkap"
                     value={participant.name}
                     onChange={(e) =>
@@ -394,7 +394,7 @@ export function CheckoutClient() {
                     disabled={state === "submitting"}
                   />
                   <Input
-                    label="Nomor HP"
+                    label="Nomor WhatsApp"
                     type="tel"
                     placeholder="08xxxxxxxxxx"
                     value={participant.phone}
@@ -426,8 +426,8 @@ export function CheckoutClient() {
       {state === "payment" && (
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            Scan QR code di atas menggunakan aplikasi e-wallet atau mobile
-            banking Anda. Pembayaran akan dikonfirmasi secara otomatis.
+            Pindai kode QRIS di atas menggunakan aplikasi pembayaran Anda.
+            Pembayaran akan dikonfirmasi secara otomatis.
           </p>
         </div>
       )}

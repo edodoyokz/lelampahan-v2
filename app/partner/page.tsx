@@ -110,7 +110,7 @@ export default function PartnerDashboard() {
           setError(
             contextResponse.status === 404
               ? 'Akun belum terhubung ke partner.'
-              : 'Login partner diperlukan.'
+              : 'Masuk sebagai partner diperlukan.'
           );
           setLoading(false);
           return;
@@ -161,7 +161,7 @@ export default function PartnerDashboard() {
   const statCards = [
     {
       icon: <ListingsIcon />,
-      label: 'Listings Aktif',
+      label: 'Pengalaman Aktif',
       value: activeListings.toString(),
       color: 'bg-amber-50 text-lelampahan-gold',
     },
@@ -183,7 +183,7 @@ export default function PartnerDashboard() {
     {
       icon: <PlusIcon />,
       title: 'Buat Listing Baru',
-      description: 'Tambahkan tour atau event baru',
+      description: 'Tambahkan tur atau acara baru',
       href: '/partner/listings/new',
     },
     {
@@ -194,7 +194,7 @@ export default function PartnerDashboard() {
     },
     {
       icon: <QrCodeIcon />,
-      title: 'Scan Tiket',
+      title: 'Pindai Tiket',
       description: 'Validasi tiket peserta',
       href: '/partner/scanner',
     },

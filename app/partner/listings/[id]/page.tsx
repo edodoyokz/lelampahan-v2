@@ -10,7 +10,7 @@ export default async function EditListingPage({ params }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Edit Listing</h1>
+      <h1 className="text-2xl font-bold text-lelampahan-earth">Edit Pengalaman</h1>
       <p className="mt-4 text-gray-500">
         Form edit untuk listing {id} akan aktif setelah database terhubung.
       </p>

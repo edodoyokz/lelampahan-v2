@@ -52,7 +52,7 @@ export function SessionPicker({
   if (sessions.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-500">Belum ada jadwal tersedia</p>
+        <p className="text-sm text-gray-500">Jadwal belum tersedia</p>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export function SessionPicker({
                   }`}
                 >
                   {isDisabled
-                    ? "Penuh"
+                    ? "Kuota penuh"
                     : `${session.remainingCapacity} tersisa`}
                 </span>
 

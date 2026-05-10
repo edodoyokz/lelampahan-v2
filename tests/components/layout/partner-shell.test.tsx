@@ -29,7 +29,7 @@ describe('PartnerShell', () => {
       </PartnerShell>
     );
     expect(screen.getAllByText('Dashboard').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Listings').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Pengalaman').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Pesanan').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Scanner').length).toBeGreaterThanOrEqual(1);
   });

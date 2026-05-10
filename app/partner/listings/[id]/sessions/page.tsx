@@ -126,7 +126,7 @@ export default function SessionsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Sesi &amp; Tipe Tiket</h1>
+      <h1 className="text-2xl font-bold text-lelampahan-earth">Jadwal &amp; Tiket</h1>
       <p className="mt-1 text-sm text-gray-500">
         Listing ID: <code className="text-xs">{listingId}</code>
       </p>
@@ -189,7 +189,7 @@ export default function SessionsPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">Booking Cutoff</label>
+              <label className="text-xs font-medium text-gray-500">Batas Waktu Booking</label>
               <input
                 type="datetime-local"
                 value={session.bookingCutoff}

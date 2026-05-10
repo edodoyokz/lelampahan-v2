@@ -30,7 +30,7 @@ describe('AdminShell', () => {
     );
     expect(screen.getAllByText('Dashboard').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Partners').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Listings').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Pengalaman').length).toBeGreaterThanOrEqual(1);
   });
 
   it('links to correct admin hrefs', () => {

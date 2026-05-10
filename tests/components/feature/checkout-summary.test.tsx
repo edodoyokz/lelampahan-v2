@@ -71,7 +71,7 @@ describe('CheckoutSummary', () => {
           expiresAt={expiresAt}
         />
       );
-      const qrImage = screen.getByAltText('QRIS QR Code');
+      const qrImage = screen.getByAltText('QRIS Kode QR');
       expect(qrImage).toBeInTheDocument();
       expect(qrImage).toHaveAttribute('src', 'https://example.com/qr.png');
     });
@@ -99,7 +99,7 @@ describe('CheckoutSummary', () => {
           expiresAt={expiresAt}
         />
       );
-      expect(screen.getByText(/Waktu pembayaran telah habis/i)).toBeInTheDocument();
+      expect(screen.getByText(/Waktu pembayaran habis/i)).toBeInTheDocument();
     });
 
     it('renders retry button when onRetry is provided and expired', () => {
@@ -161,7 +161,7 @@ describe('CheckoutSummary', () => {
         vi.advanceTimersByTime(3000);
       });
 
-      expect(screen.getByText(/Waktu pembayaran telah habis/i)).toBeInTheDocument();
+      expect(screen.getByText(/Waktu pembayaran habis/i)).toBeInTheDocument();
     });
   });
 });

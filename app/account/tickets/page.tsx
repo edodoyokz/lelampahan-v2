@@ -33,8 +33,8 @@ async function TicketsList() {
       <EmptyState
         illustration={<Ticket className="h-12 w-12 text-gray-400" strokeWidth={1.6} aria-hidden="true" />}
         title="Belum ada tiket"
-        description="Tiket QR yang sudah dibeli akan muncul di sini."
-        action={{ label: 'Jelajahi Listing', href: '/' }}
+        description="Tiket QR dari pesanan yang sudah dibayar akan muncul di sini."
+        action={{ label: 'Jelajahi Pengalaman', href: '/' }}
       />
     );
   }
@@ -85,7 +85,7 @@ export default function TicketWalletPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-lelampahan-earth">
-        Wallet Tiket
+        Tiket Saya
       </h1>
       <div className="mt-6">
         <Suspense fallback={<TicketsLoading />}>

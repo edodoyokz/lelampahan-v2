@@ -161,7 +161,7 @@ async function main() {
       title: 'Jelajah Kotagede Heritage',
       slug: 'jelajah-kotagede-heritage',
       description:
-        'Susuri lorong-lorong bersejarah Kotagede, kunjungi Masjid Mataram, pasar tradisional, dan kompleks makam raja-raja Mataram. Tur ini dipandu oleh sejarawan lokal yang akan membawa Anda menelusuri jejak kerajaan Islam pertama di Jawa.',
+        'Susuri lorong bersejarah Kotagede bersama pemandu lokal. Dalam tur ini, Anda akan mengunjungi Masjid Mataram, pasar tradisional, kompleks makam raja-raja Mataram, hingga jejak rumah Kalang dan kerajinan perak. Cocok untuk Anda yang ingin memahami Jogja dari sisi sejarah dan kehidupan lokalnya.',
       status: 'PUBLISHED',
       bookingMode: 'INSTANT_CONFIRMATION',
       timezone: 'Asia/Jakarta',
@@ -194,7 +194,7 @@ async function main() {
       title: 'Workshop Batik Tulis Yogyakarta',
       slug: 'workshop-batik-tulis',
       description:
-        'Belajar membatik langsung dari maestro batik Giriloyo. Dalam workshop 3 jam ini Anda akan membuat selembar kain batik tulis dari awal hingga akhir — mulai dari nyanting, nyolet, hingga fiksasi warna. Semua bahan disediakan, hasil karya bisa dibawa pulang.',
+        'Belajar membatik langsung dari perajin batik Giriloyo. Selama 3 jam, Anda akan mencoba proses batik tulis dari nyanting, pewarnaan, hingga fiksasi warna. Semua bahan sudah disediakan, dan hasil karya bisa Anda bawa pulang sebagai kenang-kenangan dari Jogja.',
       status: 'PUBLISHED',
       bookingMode: 'INSTANT_CONFIRMATION',
       timezone: 'Asia/Jakarta',

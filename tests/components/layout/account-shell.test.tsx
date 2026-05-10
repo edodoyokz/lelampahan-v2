@@ -42,13 +42,13 @@ describe('AccountShell', () => {
     expect(pesananLinks.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders Wallet Tiket navigation item', () => {
+  it('renders Tiket Saya navigation item', () => {
     render(
       <AccountShell>
         <div>Content</div>
       </AccountShell>
     );
-    const walletLinks = screen.getAllByText('Wallet Tiket');
+    const walletLinks = screen.getAllByText('Tiket Saya');
     expect(walletLinks.length).toBeGreaterThanOrEqual(1);
   });
 
