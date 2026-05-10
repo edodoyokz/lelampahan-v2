@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { EmptyState } from '@/components/ui/empty-state';
+import { normalizeItinerary, normalizeStringList } from '@/domain/listing/display';
 import { ListingDetailClient } from './listing-detail-client';
 
 interface Props {
@@ -94,6 +95,9 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const typeLabel = listing.type === 'TOUR' ? 'Tour' : 'Event';
   const typeBadgeStatus = listing.type === 'TOUR' ? 'info' : 'warning';
+  const itineraryItems = normalizeItinerary(listing.tourDetail?.itinerary);
+  const includedItems = normalizeStringList(listing.tourDetail?.included);
+  const excludedItems = normalizeStringList(listing.tourDetail?.excluded);
   const coverImage = (listing.images as ListingImageForDisplay[] | undefined)?.find((image) => image.isCover) ??
     (listing.images as ListingImageForDisplay[] | undefined)?.[0];
   const imageUrl = coverImage?.url;
@@ -208,35 +212,60 @@ export default async function ListingDetailPage({ params }: Props) {
             {/* Tour Details - Itinerary, Included, Excluded */}
             {listing.tourDetail && (
               <div className="space-y-4">
-                {listing.tourDetail.itinerary && (
+                {itineraryItems.length > 0 && (
                   <Card variant="outlined" padding="md">
-                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Itinerary</h2>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                      {typeof listing.tourDetail.itinerary === 'string'
-                        ? listing.tourDetail.itinerary
-                        : JSON.stringify(listing.tourDetail.itinerary, null, 2)}
-                    </p>
+                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Itinerary</h2>
+                    <ol className="space-y-4">
+                      {itineraryItems.map((item, index) => (
+                        <li key={`${item.time ?? 'step'}-${index}`} className="relative flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-lelampahan-gold/10 text-sm font-semibold text-lelampahan-gold">
+                              {index + 1}
+                            </span>
+                            {index < itineraryItems.length - 1 && (
+                              <span className="mt-2 h-full w-px flex-1 bg-gray-200" aria-hidden="true" />
+                            )}
+                          </div>
+                          <div className="min-w-0 pb-1">
+                            {item.time && (
+                              <p className="text-sm font-medium text-lelampahan-brick">{item.time}</p>
+                            )}
+                            <p className="text-gray-700 leading-relaxed">{item.activity}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
                   </Card>
                 )}
-                {listing.tourDetail.included && (
-                  <Card variant="outlined" padding="md">
-                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Termasuk</h2>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                      {typeof listing.tourDetail.included === 'string'
-                        ? listing.tourDetail.included
-                        : JSON.stringify(listing.tourDetail.included, null, 2)}
-                    </p>
-                  </Card>
-                )}
-                {listing.tourDetail.excluded && (
-                  <Card variant="outlined" padding="md">
-                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Tidak Termasuk</h2>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                      {typeof listing.tourDetail.excluded === 'string'
-                        ? listing.tourDetail.excluded
-                        : JSON.stringify(listing.tourDetail.excluded, null, 2)}
-                    </p>
-                  </Card>
+                {(includedItems.length > 0 || excludedItems.length > 0) && (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {includedItems.length > 0 && (
+                      <Card variant="outlined" padding="md">
+                        <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Termasuk</h2>
+                        <ul className="space-y-2">
+                          {includedItems.map((item) => (
+                            <li key={item} className="flex gap-2 text-gray-700">
+                              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-green-600" aria-hidden="true" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </Card>
+                    )}
+                    {excludedItems.length > 0 && (
+                      <Card variant="outlined" padding="md">
+                        <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Tidak Termasuk</h2>
+                        <ul className="space-y-2">
+                          {excludedItems.map((item) => (
+                            <li key={item} className="flex gap-2 text-gray-700">
+                              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-gray-400" aria-hidden="true" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </Card>
+                    )}
+                  </div>
                 )}
               </div>
             )}
