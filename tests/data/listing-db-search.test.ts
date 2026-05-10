@@ -31,6 +31,9 @@ describe('search published listings in db', () => {
       },
       include: {
         partner: true,
+        images: {
+          orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+        },
         sessions: { where: { status: 'PUBLISHED' }, include: { ticketTypes: true } },
       },
       orderBy: { createdAt: 'desc' },

@@ -8,11 +8,24 @@ import { Button } from '@/components/ui/button';
 type ListingType = 'TOUR' | 'EVENT';
 type BookingMode = 'INSTANT_CONFIRMATION' | 'REQUEST_TO_BOOK';
 
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+interface UploadedCoverImage {
+  key: string;
+  url: string;
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+  sizeBytes: number;
+  alt?: string;
+}
+
 export default function NewListingPage() {
   const [type, setType] = useState<ListingType>('TOUR');
   const [bookingMode, setBookingMode] = useState<BookingMode>('INSTANT_CONFIRMATION');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [duration, setDuration] = useState('');
   const [meetingPoint, setMeetingPoint] = useState('');
   const [venue, setVenue] = useState('');
@@ -89,6 +102,78 @@ export default function NewListingPage() {
     setSessions(updated);
   };
 
+  const handleCoverImageChange = (file: File | null) => {
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+    }
+
+    if (!file) {
+      setCoverImageFile(null);
+      setCoverPreviewUrl(null);
+      return;
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setErrors((current) => ({ ...current, coverImage: 'Format gambar harus JPG, PNG, atau WebP' }));
+      setCoverImageFile(null);
+      setCoverPreviewUrl(null);
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setErrors((current) => ({ ...current, coverImage: 'Ukuran gambar maksimal 5MB' }));
+      setCoverImageFile(null);
+      setCoverPreviewUrl(null);
+      return;
+    }
+
+    setErrors((current) => {
+      const { coverImage, ...rest } = current;
+      void coverImage;
+      return rest;
+    });
+    setCoverImageFile(file);
+    setCoverPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const uploadCoverImage = async (): Promise<UploadedCoverImage | undefined> => {
+    if (!coverImageFile) return undefined;
+
+    const signResponse = await fetch('/api/upload/listing-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: coverImageFile.name,
+        contentType: coverImageFile.type,
+        sizeBytes: coverImageFile.size,
+      }),
+    });
+
+    if (!signResponse.ok) {
+      const error = await signResponse.json().catch(() => ({}));
+      throw new Error(error.error ?? 'Gagal menyiapkan upload gambar');
+    }
+
+    const target = (await signResponse.json()) as { uploadUrl: string; key: string; publicUrl: string };
+    const uploadResponse = await fetch(target.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': coverImageFile.type },
+      body: coverImageFile,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Gagal mengupload gambar ke storage');
+    }
+
+    return {
+      key: target.key,
+      url: target.publicUrl,
+      mimeType: coverImageFile.type as UploadedCoverImage['mimeType'],
+      sizeBytes: coverImageFile.size,
+      alt: title || undefined,
+    };
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -119,26 +204,6 @@ export default function NewListingPage() {
     setSubmitting(true);
     setResult(null);
 
-    const body = {
-      title,
-      type,
-      description,
-      bookingMode,
-      partnerId,
-      timezone: 'Asia/Jakarta',
-      included: included.trim() || undefined,
-      excluded: excluded.trim() || undefined,
-      tourDetails:
-        type === 'TOUR'
-          ? {
-              duration,
-              meetingPoint,
-              itinerary: itinerary.filter((i) => i.time && i.activity),
-            }
-          : undefined,
-      eventDetails: type === 'EVENT' ? { venue } : undefined,
-    };
-
     if (!partnerId) {
       setResult('Akun belum terhubung ke partner.');
       setSubmitting(false);
@@ -146,6 +211,28 @@ export default function NewListingPage() {
     }
 
     try {
+      const coverImage = await uploadCoverImage();
+      const body = {
+        title,
+        type,
+        description,
+        bookingMode,
+        partnerId,
+        timezone: 'Asia/Jakarta',
+        included: included.trim() || undefined,
+        excluded: excluded.trim() || undefined,
+        coverImage,
+        tourDetails:
+          type === 'TOUR'
+            ? {
+                duration,
+                meetingPoint,
+                itinerary: itinerary.filter((i) => i.time && i.activity),
+              }
+            : undefined,
+        eventDetails: type === 'EVENT' ? { venue } : undefined,
+      };
+
       const res = await fetch('/api/listing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,6 +243,9 @@ export default function NewListingPage() {
         setResult('Listing berhasil dibuat ✅');
         setTitle('');
         setDescription('');
+        setCoverImageFile(null);
+        if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+        setCoverPreviewUrl(null);
         setDuration('');
         setMeetingPoint('');
         setVenue('');
@@ -170,8 +260,8 @@ export default function NewListingPage() {
         const err = await res.json();
         setResult(`Gagal: ${err.error || 'Unknown error'}`);
       }
-    } catch {
-      setResult('Gagal terhubung ke server');
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : 'Gagal terhubung ke server');
     } finally {
       setSubmitting(false);
     }
@@ -218,6 +308,26 @@ export default function NewListingPage() {
               {errors.description && (
                 <p className="text-sm text-red-600">{errors.description}</p>
               )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="coverImage" className="text-sm font-medium text-gray-700">
+                Gambar Cover
+              </label>
+              <input
+                id="coverImage"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => handleCoverImageChange(event.target.files?.[0] ?? null)}
+                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-lelampahan-cream file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-lelampahan-earth hover:file:bg-lelampahan-gold/20"
+              />
+              <p className="text-xs text-gray-500">Opsional. Format JPG, PNG, atau WebP. Maksimal 5MB.</p>
+              {coverPreviewUrl && (
+                <div className="aspect-video overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+                  <img src={coverPreviewUrl} alt="Preview cover listing" className="h-full w-full object-cover" />
+                </div>
+              )}
+              {errors.coverImage && <p className="text-sm text-red-600">{errors.coverImage}</p>}
             </div>
 
             <div className="flex flex-col gap-1">

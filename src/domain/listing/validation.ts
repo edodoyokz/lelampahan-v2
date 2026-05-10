@@ -18,6 +18,16 @@ export const eventDetailSchema = z.object({
   gateNotes: z.string().optional(),
 });
 
+export const listingCoverImageSchema = z.object({
+  key: z.string().min(1).max(1024),
+  url: z.string().url().max(2048),
+  alt: z.string().max(200).optional(),
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  sizeBytes: z.number().int().positive().max(5 * 1024 * 1024),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+
 export const listingSchema = z.object({
   title: z.string().min(3).max(200),
   type: z.enum(['TOUR', 'EVENT']),
@@ -27,6 +37,7 @@ export const listingSchema = z.object({
   timezone: z.string().default('Asia/Jakarta'),
   tourDetails: tourDetailSchema.optional(),
   eventDetails: eventDetailSchema.optional(),
+  coverImage: listingCoverImageSchema.optional(),
 });
 
 export type TourListingInput = z.infer<typeof listingSchema>;

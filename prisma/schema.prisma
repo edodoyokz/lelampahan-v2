@@ -219,6 +219,27 @@ model Listing {
   tourDetail  TourDetail?
   eventDetail EventDetail?
   sessions    Session[]
+  images      ListingImage[]
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  listingId String
+  key       String   @unique
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  isCover   Boolean  @default(false)
+  mimeType  String
+  sizeBytes Int
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, sortOrder])
 }
 
 model TourDetail {

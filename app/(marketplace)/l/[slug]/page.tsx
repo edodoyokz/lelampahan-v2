@@ -14,6 +14,12 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+interface ListingImageForDisplay {
+  url: string;
+  alt: string | null;
+  isCover: boolean;
+}
+
 interface ListingSessionForPicker {
   id: string;
   startsAt: Date;
@@ -33,6 +39,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Listing tidak ditemukan' };
   }
 
+  const coverImage = (listing.images as ListingImageForDisplay[] | undefined)?.find((image) => image.isCover) ??
+    (listing.images as ListingImageForDisplay[] | undefined)?.[0];
+  const imageUrl = coverImage?.url;
+
   return {
     title: `${listing.title} | Lelampahan`,
     description: listing.description,
@@ -40,6 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: listing.title,
       description: listing.description,
       type: 'article',
+      images: imageUrl ? [{ url: imageUrl, alt: listing.title }] : undefined,
     },
   };
 }
@@ -83,6 +94,9 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const typeLabel = listing.type === 'TOUR' ? 'Tour' : 'Event';
   const typeBadgeStatus = listing.type === 'TOUR' ? 'info' : 'warning';
+  const coverImage = (listing.images as ListingImageForDisplay[] | undefined)?.find((image) => image.isCover) ??
+    (listing.images as ListingImageForDisplay[] | undefined)?.[0];
+  const imageUrl = coverImage?.url;
 
   // Prepare sessions data for the client component
   const sessionsForPicker = await Promise.all(
@@ -137,13 +151,16 @@ export default async function ListingDetailPage({ params }: Props) {
         {/* Image Gallery Section */}
         <section aria-label="Galeri gambar listing">
           <div className="aspect-video w-full rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
-            {/* Placeholder - no images available yet */}
-            <div className="text-center text-gray-400">
-              <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-              </svg>
-              <p className="mt-2 text-sm">Belum ada gambar</p>
-            </div>
+            {imageUrl ? (
+              <img src={imageUrl} alt={coverImage?.alt ?? listing.title} className="h-full w-full object-cover" />
+            ) : (
+              <div className="text-center text-gray-400">
+                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                </svg>
+                <p className="mt-2 text-sm">Belum ada gambar</p>
+              </div>
+            )}
           </div>
         </section>
 

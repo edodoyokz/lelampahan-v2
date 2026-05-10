@@ -37,8 +37,23 @@ export async function createListingInDb(input: TourListingInput) {
             },
           }
         : undefined,
+      images: input.coverImage
+        ? {
+            create: {
+              key: input.coverImage.key,
+              url: input.coverImage.url,
+              alt: input.coverImage.alt,
+              mimeType: input.coverImage.mimeType,
+              sizeBytes: input.coverImage.sizeBytes,
+              width: input.coverImage.width,
+              height: input.coverImage.height,
+              isCover: true,
+              sortOrder: 0,
+            },
+          }
+        : undefined,
     },
-    include: { tourDetail: true, eventDetail: true },
+    include: { tourDetail: true, eventDetail: true, images: true },
   });
 
   return listing;
@@ -58,6 +73,7 @@ export async function findListingBySlug(slug: string) {
       partner: true,
       tourDetail: true,
       eventDetail: true,
+      images: { orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }] },
       sessions: {
         where: { status: 'PUBLISHED' },
         include: { ticketTypes: { where: { active: true } } },
@@ -74,6 +90,7 @@ export async function listPublishedListings() {
       partner: true,
       eventDetail: true,
       tourDetail: true,
+      images: { orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }] },
       sessions: { where: { status: 'PUBLISHED' }, include: { ticketTypes: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -98,6 +115,7 @@ export async function searchPublishedListingsInDb(input: { q?: string | null; ty
     },
     include: {
       partner: true,
+      images: { orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }] },
       sessions: { where: { status: 'PUBLISHED' }, include: { ticketTypes: true } },
     },
     orderBy: { createdAt: 'desc' },

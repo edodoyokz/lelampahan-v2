@@ -13,6 +13,7 @@ interface PublishedListingForHome {
   sessions: Array<{
     ticketTypes: Array<{ price: number }>;
   }>;
+  images?: Array<{ url: string; isCover: boolean; sortOrder: number }>;
 }
 
 function ListingsGridSkeleton() {
@@ -46,13 +47,14 @@ async function ListingsContent() {
 
   const mappedListings = (listings as PublishedListingForHome[]).map((listing) => {
     const firstTicketType = listing.sessions[0]?.ticketTypes[0];
+    const coverImage = listing.images?.find((image) => image.isCover) ?? listing.images?.[0];
     return {
       id: listing.id,
       slug: listing.slug,
       title: listing.title,
       type: listing.type as 'TOUR' | 'EVENT',
       location: listing.eventDetail?.venue ?? undefined,
-      imageUrl: undefined,
+      imageUrl: coverImage?.url,
       priceFrom: firstTicketType?.price ?? undefined,
       partnerName: listing.partner.name,
       sessionsCount: listing.sessions.length,
