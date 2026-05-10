@@ -4,6 +4,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { config } from 'dotenv';
 import { readFile, stat } from 'fs/promises';
 import path from 'path';
+import { createSeedAuthAccounts, createSeedSupabaseAdminClient, seedAuthAccounts } from './seed-auth-accounts';
 
 config({ path: '.env' });
 
@@ -104,18 +105,39 @@ async function uploadSeedListingImage(input: {
 async function main() {
   console.log('🌱 Seeding Lelampahan...');
 
-  // ---- User Profile (placeholder customer) ----
-  const customer = await prisma.userProfile.upsert({
-    where: { email: 'budi@example.com' },
-    update: {},
-    create: {
-      authUserId: 'seed-customer-01',
-      email: 'budi@example.com',
-      name: 'Budi Santoso',
-      role: 'CUSTOMER',
-    },
-  });
-  console.log('  ✅ Customer:', customer.email);
+  // ---- Auth users + User Profiles for each role ----
+  const seedAccounts = createSeedAuthAccounts();
+  const supabaseAdmin = createSeedSupabaseAdminClient();
+  const seededAuthAccounts = supabaseAdmin ? await seedAuthAccounts(supabaseAdmin, seedAccounts) : [];
+  const authIdByEmail = new Map(seededAuthAccounts.map((account) => [account.email, account.authUserId]));
+
+  if (supabaseAdmin) {
+    console.log('  ✅ Supabase auth users:', seededAuthAccounts.length);
+  } else {
+    console.log('  ⚠️  Supabase auth seed skipped: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing');
+  }
+
+  const seededProfiles = await Promise.all(
+    seedAccounts.map((account) =>
+      prisma.userProfile.upsert({
+        where: { email: account.email },
+        update: {
+          authUserId: authIdByEmail.get(account.email) ?? `seed-${account.email}`,
+          name: account.name,
+          role: account.role,
+        },
+        create: {
+          authUserId: authIdByEmail.get(account.email) ?? `seed-${account.email}`,
+          email: account.email,
+          name: account.name,
+          role: account.role,
+        },
+      }),
+    ),
+  );
+  const customer = seededProfiles.find((profile) => profile.email === 'customer@lelampahan.test')!;
+  const partnerOwner = seededProfiles.find((profile) => profile.email === 'partner@lelampahan.test')!;
+  console.log('  ✅ Role profiles:', seededProfiles.map((profile) => `${profile.email} (${profile.role})`).join(', '));
 
   // ---- Partner: Jogja Adventure (tours) ----
   const partnerTour = await prisma.partner.upsert({
@@ -345,23 +367,12 @@ async function main() {
   console.log('  ✅ Event ticket types');
 
   // ---- Partner Membership (sample partner user) ----
-  const partnerUser = await prisma.userProfile.upsert({
-    where: { email: 'owner@jogjaadventure.com' },
-    update: {},
-    create: {
-      authUserId: 'seed-partner-01',
-      email: 'owner@jogjaadventure.com',
-      name: 'Pak Joko',
-      role: 'CUSTOMER',
-    },
-  });
-
   await prisma.partnerMembership.upsert({
-    where: { partnerId_userId: { partnerId: partnerTour.id, userId: partnerUser.id } },
-    update: {},
-    create: { partnerId: partnerTour.id, userId: partnerUser.id, role: 'OWNER' },
+    where: { partnerId_userId: { partnerId: partnerTour.id, userId: partnerOwner.id } },
+    update: { role: 'OWNER' },
+    create: { partnerId: partnerTour.id, userId: partnerOwner.id, role: 'OWNER' },
   });
-  console.log('  ✅ Partner membership: Pak Joko → Jogja Adventure');
+  console.log('  ✅ Partner membership: Partner Jogja Adventure → Jogja Adventure');
 
   // ---- Sample Order (paid) ----
   const sampleOrder = await prisma.order.upsert({
@@ -400,6 +411,11 @@ async function main() {
 
   console.log('\n🎉 Seed selesai!');
   console.log('  Marketplace: http://localhost:3000');
+  console.log('  Demo password:', process.env.SEED_AUTH_PASSWORD ?? 'Password123!');
+  console.log('  Customer:', 'customer@lelampahan.test');
+  console.log('  Admin:', 'admin@lelampahan.test');
+  console.log('  Super admin:', 'superadmin@lelampahan.test');
+  console.log('  Partner:', 'partner@lelampahan.test');
   console.log('  Listing tour:', `/l/${tourListing.slug}`);
   console.log('  Listing event:', `/l/${eventListing.slug}`);
 }
