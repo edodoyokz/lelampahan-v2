@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createQrisPayment } from '@/domain/payment/qris-mock';
-import { createPaymentRecord } from '@/data/payment';
+import { getPaymentProvider } from '@/domain/payment/factory';
+import { createPaymentRecord, findPendingPaymentOrderForUser } from '@/data/payment';
+import { ensureUserProfileForAuthUser } from '@/data/user';
+import { DomainError } from '@/domain/shared/errors';
 import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 const paymentSchema = z.object({
   orderId: z.string().min(1),
-  amount: z.number().int().min(0),
   idempotencyKey: z.string().min(1),
-  orderNumber: z.string().min(1),
 });
 
 export async function POST(request: Request) {
@@ -19,19 +19,50 @@ export async function POST(request: Request) {
 
     const body = await parseBody(request);
     const input = paymentSchema.parse(body);
+    const profile = await ensureUserProfileForAuthUser({
+      authUserId: auth.user.id,
+      email: auth.user.email,
+      name:
+        typeof auth.user.user_metadata?.full_name === 'string'
+          ? auth.user.user_metadata.full_name
+          : typeof auth.user.user_metadata?.name === 'string'
+            ? auth.user.user_metadata.name
+            : null,
+    });
 
-    const paymentResult = createQrisPayment(input);
+    const order = await findPendingPaymentOrderForUser(input.orderId, profile.id);
+    if (!order) {
+      throw new DomainError('ORDER_NOT_PAYABLE', 'Order is not payable');
+    }
+
+    const paymentProvider = getPaymentProvider();
+    const paymentResult = await paymentProvider.createQrisPayment({
+      orderId: order.id,
+      amount: order.totalAmount,
+      idempotencyKey: input.idempotencyKey,
+      orderNumber: order.orderNumber,
+    });
 
     const persisted = await createPaymentRecord({
-      orderId: input.orderId,
+      orderId: order.id,
       provider: paymentResult.provider,
       method: paymentResult.method,
       amount: paymentResult.amount,
       idempotencyKey: input.idempotencyKey,
       expiresAt: paymentResult.expiresAt,
+      providerRef: paymentResult.providerRef,
+      rawPayload: paymentResult.rawPayload,
     });
 
-    return NextResponse.json(persisted, { status: 201 });
+    return NextResponse.json(
+      {
+        ...persisted,
+        qrString: paymentResult.qrString,
+        providerRef: paymentResult.providerRef,
+        rawPayload: paymentResult.rawPayload,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     return handleApiError(error);
   }

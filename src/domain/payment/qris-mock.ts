@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { CreatePaymentInput, CreatePaymentResult } from './adapter';
+import type { QrisPaymentProvider } from './provider';
 
 const DEFAULT_EXPIRY_MINUTES = 30;
 
@@ -20,3 +21,10 @@ export function createQrisPayment(input: CreatePaymentInput): CreatePaymentResul
     qrString: `lelampahan://qris/${input.orderNumber}/${ref}`,
   };
 }
+
+export const mockQrisProvider: QrisPaymentProvider = {
+  name: 'mock',
+  async createQrisPayment(input) {
+    return createQrisPayment(input);
+  },
+};

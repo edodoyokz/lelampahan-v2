@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   transactionMock: vi.fn(),
@@ -37,6 +37,10 @@ vi.mock('@prisma/client', () => ({
 import { createReservedOrder } from '@/data/booking';
 
 describe('createReservedOrder', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('creates a reservation and order in a serializable transaction', async () => {
     const tx = {
       session: { findUnique: mocks.sessionFindUniqueMock },
@@ -54,8 +58,12 @@ describe('createReservedOrder', () => {
       capacity: 10,
       ticketTypes: [{ id: 'ticket-type-1', quota: 4, active: true }],
     });
-    mocks.reservationAggregateMock.mockResolvedValue({ _sum: { quantity: 1 } });
-    mocks.orderItemAggregateMock.mockResolvedValue({ _sum: { quantity: 1 } });
+    mocks.reservationAggregateMock
+      .mockResolvedValueOnce({ _sum: { quantity: 1 } })
+      .mockResolvedValueOnce({ _sum: { quantity: 1 } });
+    mocks.orderItemAggregateMock
+      .mockResolvedValueOnce({ _sum: { quantity: 1 } })
+      .mockResolvedValueOnce({ _sum: { quantity: 1 } });
     mocks.reservationCreateMock.mockResolvedValue({ id: 'reservation-1' });
     mocks.orderCreateMock.mockResolvedValue({ id: 'order-1', reservationId: 'reservation-1' });
 
@@ -130,5 +138,64 @@ describe('createReservedOrder', () => {
         now: new Date('2026-05-09T10:00:00.000Z'),
       }),
     ).rejects.toThrow('Not enough capacity available');
+  });
+
+  it('checks session capacity across all ticket types before checking ticket type quota', async () => {
+    const tx = {
+      session: { findUnique: mocks.sessionFindUniqueMock },
+      reservation: {
+        aggregate: mocks.reservationAggregateMock,
+        create: mocks.reservationCreateMock,
+      },
+      orderItem: { aggregate: mocks.orderItemAggregateMock },
+      order: { create: mocks.orderCreateMock },
+    };
+
+    const now = new Date('2026-05-09T10:00:00.000Z');
+    mocks.transactionMock.mockImplementation(async (callback) => callback(tx));
+    mocks.sessionFindUniqueMock.mockResolvedValue({
+      id: 'session-1',
+      capacity: 3,
+      ticketTypes: [{ id: 'ticket-type-1', quota: 10, active: true }],
+    });
+    mocks.reservationAggregateMock
+      .mockResolvedValueOnce({ _sum: { quantity: 2 } })
+      .mockResolvedValueOnce({ _sum: { quantity: 0 } });
+    mocks.orderItemAggregateMock
+      .mockResolvedValueOnce({ _sum: { quantity: 1 } })
+      .mockResolvedValueOnce({ _sum: { quantity: 0 } });
+
+    await expect(
+      createReservedOrder({
+        orderNumber: 'LM-20260509-ABCD',
+        userId: 'user-1',
+        sessionId: 'session-1',
+        ticketTypeId: 'ticket-type-1',
+        quantity: 1,
+        unitPrice: 50000,
+        totalAmount: 50000,
+        participants: [{ name: 'Budi', email: 'budi@example.com', phone: '0811' }],
+        expiresAt: new Date('2026-05-09T10:30:00.000Z'),
+        now,
+      }),
+    ).rejects.toThrow('Not enough capacity available');
+
+    expect(mocks.reservationAggregateMock).toHaveBeenNthCalledWith(1, {
+      where: {
+        sessionId: 'session-1',
+        status: 'ACTIVE',
+        expiresAt: { gt: now },
+      },
+      _sum: { quantity: true },
+    });
+    expect(mocks.orderItemAggregateMock).toHaveBeenNthCalledWith(1, {
+      where: {
+        order: {
+          sessionId: 'session-1',
+          status: { in: ['PAID', 'COMPLETED'] },
+        },
+      },
+      _sum: { quantity: true },
+    });
   });
 });

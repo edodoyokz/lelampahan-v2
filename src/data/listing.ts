@@ -55,9 +55,14 @@ export async function findListingBySlug(slug: string) {
   return prisma.listing.findUnique({
     where: { slug },
     include: {
+      partner: true,
       tourDetail: true,
       eventDetail: true,
-      sessions: { where: { status: 'PUBLISHED' } },
+      sessions: {
+        where: { status: 'PUBLISHED' },
+        include: { ticketTypes: { where: { active: true } } },
+        orderBy: { startsAt: 'asc' },
+      },
     },
   });
 }
@@ -67,6 +72,8 @@ export async function listPublishedListings() {
     where: { status: 'PUBLISHED' },
     include: {
       partner: true,
+      eventDetail: true,
+      tourDetail: true,
       sessions: { where: { status: 'PUBLISHED' }, include: { ticketTypes: true } },
     },
     orderBy: { createdAt: 'desc' },

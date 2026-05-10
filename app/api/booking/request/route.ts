@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createBookingRequest } from '@/domain/booking/checkout';
 import { generateOrderNumber } from '@/lib/order-number';
+import { ensureUserProfileForAuthUser } from '@/data/user';
 import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 const requestSchema = z.object({
-  userId: z.string().min(1),
   sessionId: z.string().min(1),
   ticketTypeId: z.string().min(1),
   quantity: z.number().int().min(1),
@@ -22,8 +22,19 @@ export async function POST(request: Request) {
 
     const body = await parseBody(request);
     const input = requestSchema.parse(body);
+    const profile = await ensureUserProfileForAuthUser({
+      authUserId: auth.user.id,
+      email: auth.user.email,
+      name:
+        typeof auth.user.user_metadata?.full_name === 'string'
+          ? auth.user.user_metadata.full_name
+          : typeof auth.user.user_metadata?.name === 'string'
+            ? auth.user.user_metadata.name
+            : null,
+    });
     const booking = createBookingRequest({
       ...input,
+      userId: profile.id,
       orderNumber: generateOrderNumber(),
     });
 

@@ -17,4 +17,5 @@ export interface CreatePaymentResult {
   status: 'PENDING' | 'PAID' | 'EXPIRED' | 'FAILED';
   expiresAt: Date;
   qrString: string;
+  rawPayload?: unknown;
 }

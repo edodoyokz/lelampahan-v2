@@ -62,19 +62,17 @@ export async function createReservedOrder(data: {
       }
 
       const now = data.now ?? new Date();
-      const activeReservationQuantity = await tx.reservation.aggregate({
+      const activeSessionReservationQuantity = await tx.reservation.aggregate({
         where: {
           sessionId: data.sessionId,
-          ticketTypeId: data.ticketTypeId,
           status: ReservationStatus.ACTIVE,
           expiresAt: { gt: now },
         },
         _sum: { quantity: true },
       });
 
-      const soldQuantity = await tx.orderItem.aggregate({
+      const soldSessionQuantity = await tx.orderItem.aggregate({
         where: {
-          ticketTypeId: data.ticketTypeId,
           order: {
             sessionId: data.sessionId,
             status: { in: [OrderStatus.PAID, OrderStatus.COMPLETED] },
@@ -85,16 +83,37 @@ export async function createReservedOrder(data: {
 
       ensureCapacityAvailable({
         capacity: session.capacity,
-        soldQuantity: soldQuantity._sum.quantity ?? 0,
-        activeReservedQuantity: activeReservationQuantity._sum.quantity ?? 0,
+        soldQuantity: soldSessionQuantity._sum.quantity ?? 0,
+        activeReservedQuantity: activeSessionReservationQuantity._sum.quantity ?? 0,
         requestedQuantity: data.quantity,
       });
 
       if (ticketType.quota !== null) {
+        const activeTicketReservationQuantity = await tx.reservation.aggregate({
+          where: {
+            sessionId: data.sessionId,
+            ticketTypeId: data.ticketTypeId,
+            status: ReservationStatus.ACTIVE,
+            expiresAt: { gt: now },
+          },
+          _sum: { quantity: true },
+        });
+
+        const soldTicketQuantity = await tx.orderItem.aggregate({
+          where: {
+            ticketTypeId: data.ticketTypeId,
+            order: {
+              sessionId: data.sessionId,
+              status: { in: [OrderStatus.PAID, OrderStatus.COMPLETED] },
+            },
+          },
+          _sum: { quantity: true },
+        });
+
         ensureCapacityAvailable({
           capacity: ticketType.quota,
-          soldQuantity: soldQuantity._sum.quantity ?? 0,
-          activeReservedQuantity: activeReservationQuantity._sum.quantity ?? 0,
+          soldQuantity: soldTicketQuantity._sum.quantity ?? 0,
+          activeReservedQuantity: activeTicketReservationQuantity._sum.quantity ?? 0,
           requestedQuantity: data.quantity,
         });
       }
@@ -143,6 +162,20 @@ export async function createReservedOrder(data: {
   );
 }
 
+export async function findOrderByOrderNumber(orderNumber: string) {
+  return prisma.order.findUnique({
+    where: { orderNumber },
+    include: {
+      items: true,
+      payment: true,
+      tickets: true,
+      participants: true,
+      session: { include: { listing: true } },
+      reservation: true,
+    },
+  });
+}
+
 export async function findOrderById(id: string) {
   return prisma.order.findUnique({
     where: { id },
@@ -161,7 +194,12 @@ export async function findOrdersByUser(userId: string) {
   return prisma.order.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
-    include: { items: true, payment: true, tickets: true },
+    include: {
+      items: true,
+      payment: true,
+      tickets: true,
+      session: { include: { listing: true } },
+    },
   });
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createQrisPayment } from '@/domain/payment/qris-mock';
+import { createQrisPayment, mockQrisProvider } from '@/domain/payment/qris-mock';
 
 describe('mock QRIS adapter', () => {
   it('creates a pending payment with a mock QR code', () => {
@@ -14,6 +14,19 @@ describe('mock QRIS adapter', () => {
     expect(payment.method).toBe('QRIS');
     expect(payment.qrString).toContain('lelampahan://qris');
     expect(payment.provider).toBe('MOCK_QRIS');
+  });
+
+  it('exposes mock QRIS through provider interface', async () => {
+    const payment = await mockQrisProvider.createQrisPayment({
+      orderId: 'order-1',
+      amount: 100000,
+      idempotencyKey: 'payment:create:order-1:1',
+      orderNumber: 'LM-001',
+    });
+
+    expect(mockQrisProvider.name).toBe('mock');
+    expect(payment.provider).toBe('MOCK_QRIS');
+    expect(payment.method).toBe('QRIS');
   });
 
   it('generates different QR for different orders', () => {

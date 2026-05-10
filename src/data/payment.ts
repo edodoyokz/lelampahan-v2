@@ -1,4 +1,4 @@
-import { PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@/db/prisma';
 
 export async function createPaymentRecord(data: {
@@ -8,9 +8,33 @@ export async function createPaymentRecord(data: {
   amount: number;
   idempotencyKey: string;
   expiresAt: Date;
+  providerRef?: string;
+  rawPayload?: unknown;
 }) {
   return prisma.payment.create({
-    data,
+    data: {
+      orderId: data.orderId,
+      provider: data.provider,
+      method: data.method,
+      amount: data.amount,
+      idempotencyKey: data.idempotencyKey,
+      expiresAt: data.expiresAt,
+      ...(data.providerRef ? { providerRef: data.providerRef } : {}),
+      ...(data.rawPayload ? { rawPayload: data.rawPayload as object } : {}),
+    },
+  });
+}
+
+export async function findPendingPaymentOrderForUser(orderId: string, userId: string) {
+  return prisma.order.findUnique({
+    where: { id: orderId, userId, status: OrderStatus.PENDING_PAYMENT },
+    select: {
+      id: true,
+      orderNumber: true,
+      totalAmount: true,
+      userId: true,
+      status: true,
+    },
   });
 }
 

@@ -1,6 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { DataTable, type Column } from '@/components/ui/data-table';
+import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
+import { formatIDR } from '@/lib/format-currency';
 
 interface BookingItem {
   id: string;
@@ -8,132 +13,248 @@ interface BookingItem {
   status: string;
   totalAmount: number;
   createdAt: string;
-  participants?: Array<{ name: string }>;
+  participants?: Array<{ name: string; email?: string }>;
   session?: { listing?: { title: string } };
   reservation?: { status: string } | null;
 }
 
+type ModalAction = {
+  id: string;
+  action: 'approve' | 'reject';
+  orderNumber: string;
+} | null;
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
-  const [status, setStatus] = useState('Memuat pesanan...');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [modalAction, setModalAction] = useState<ModalAction>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadBookings = useCallback(async () => {
-    setStatus('Memuat pesanan...');
+    setLoading(true);
+    setError('');
     const response = await fetch('/api/partner/bookings', { cache: 'no-store' });
     if (!response.ok) {
-      if (response.status === 404) setStatus('Akun belum terhubung ke partner.');
-      else setStatus('Gagal memuat pesanan.');
+      if (response.status === 404) setError('Akun belum terhubung ke partner.');
+      else setError('Gagal memuat pesanan.');
+      setLoading(false);
       return;
     }
 
     const data = await response.json();
     setBookings(data.orders ?? []);
-    setStatus('');
+    setLoading(false);
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadBookings();
   }, [loadBookings]);
 
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
-    const response = await fetch(`/api/booking/${id}/${action}`, {
+  const handleAction = async () => {
+    if (!modalAction) return;
+
+    setActionLoading(true);
+    const response = await fetch(`/api/booking/${modalAction.id}/${modalAction.action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {
-      setStatus('Gagal menyimpan keputusan.');
+      setError('Gagal menyimpan keputusan.');
+      setActionLoading(false);
+      setModalAction(null);
       return;
     }
 
     setBookings((prev) =>
       prev.map((b) =>
-        b.id === id
-          ? { ...b, status: action === 'approve' ? 'PARTNER_APPROVED' : 'PARTNER_REJECTED' }
+        b.id === modalAction.id
+          ? { ...b, status: modalAction.action === 'approve' ? 'PARTNER_APPROVED' : 'PARTNER_REJECTED' }
           : b,
       ),
     );
+    setActionLoading(false);
+    setModalAction(null);
   };
+
+  const columns: Column<BookingItem>[] = [
+    {
+      key: 'orderNumber',
+      header: 'Order Number',
+      render: (item) => (
+        <span className="font-mono text-xs">{item.orderNumber}</span>
+      ),
+    },
+    {
+      key: 'customer',
+      header: 'Pelanggan',
+      render: (item) => (
+        <span className="text-gray-700">
+          {item.participants?.[0]?.name ?? item.participants?.[0]?.email ?? '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'listing',
+      header: 'Listing',
+      render: (item) => (
+        <span className="text-gray-600">{item.session?.listing?.title ?? '-'}</span>
+      ),
+      hideOnMobile: true,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (item) => (
+        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+      ),
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      render: (item) => (
+        <span className="text-gray-700">
+          {formatIDR(item.totalAmount)}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Aksi',
+      render: (item) => (
+        <div className="flex items-center gap-2">
+          {item.status === 'REQUESTED' && (
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() =>
+                  setModalAction({ id: item.id, action: 'approve', orderNumber: item.orderNumber })
+                }
+              >
+                Setujui
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() =>
+                  setModalAction({ id: item.id, action: 'reject', orderNumber: item.orderNumber })
+                }
+              >
+                Tolak
+              </Button>
+            </>
+          )}
+          {item.status === 'PENDING_PAYMENT' && item.reservation?.status === 'ACTIVE' && (
+            <span className="text-xs text-gray-500">Menunggu pembayaran</span>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const mobileCardRender = (item: BookingItem) => (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-xs text-gray-900">{item.orderNumber}</span>
+        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-gray-900">
+          {item.participants?.[0]?.name ?? item.participants?.[0]?.email ?? '-'}
+        </p>
+        <p className="text-xs text-gray-500">{item.session?.listing?.title ?? '-'}</p>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">
+          {formatIDR(item.totalAmount)}
+        </span>
+        {item.status === 'REQUESTED' && (
+          <div className="flex gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() =>
+                setModalAction({ id: item.id, action: 'approve', orderNumber: item.orderNumber })
+              }
+            >
+              Setujui
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() =>
+                setModalAction({ id: item.id, action: 'reject', orderNumber: item.orderNumber })
+              }
+            >
+              Tolak
+            </Button>
+          </div>
+        )}
+        {item.status === 'PENDING_PAYMENT' && item.reservation?.status === 'ACTIVE' && (
+          <span className="text-xs text-gray-500">Menunggu pembayaran</span>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-lelampahan-earth">Pesanan &amp; Permintaan Booking</h1>
       <p className="mt-1 text-sm text-gray-500">Kelola pesanan masuk dan request-to-book.</p>
-      {status && <p className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">{status}</p>}
 
-      <div className="mt-6 overflow-hidden rounded-lg bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th className="px-6 py-3 font-medium">Order</th>
-              <th className="px-6 py-3 font-medium">Pelanggan</th>
-              <th className="px-6 py-3 font-medium">Listing</th>
-              <th className="px-6 py-3 font-medium">Status</th>
-              <th className="px-6 py-3 font-medium">Total</th>
-              <th className="px-6 py-3 font-medium">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {bookings.map((b) => (
-              <tr key={b.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-mono text-xs text-gray-900">{b.orderNumber}</td>
-                <td className="px-6 py-4 text-gray-700">
-                  {b.participants?.[0]?.name ?? '-'}
-                </td>
-                <td className="px-6 py-4 text-gray-500">
-                  {b.session?.listing?.title ?? '-'}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      b.status === 'PAID'
-                        ? 'bg-green-100 text-green-800'
-                        : b.status === 'PENDING_PAYMENT'
-                          ? 'bg-blue-100 text-blue-800'
-                          : b.status === 'REQUESTED'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    {b.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-gray-700">
-                  Rp {b.totalAmount.toLocaleString('id-ID')}
-                </td>
-                <td className="px-6 py-4">
-                  {b.status === 'REQUESTED' && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleAction(b.id, 'approve')}
-                        className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
-                      >
-                        Setujui
-                      </button>
-                      <button
-                        onClick={() => handleAction(b.id, 'reject')}
-                        className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
-                      >
-                        Tolak
-                      </button>
-                    </div>
-                  )}
-                  {b.status === 'PENDING_PAYMENT' && b.reservation?.status === 'ACTIVE' && (
-                    <span className="text-xs text-gray-500">Menunggu pembayaran</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {bookings.length === 0 && !status && (
-              <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                  Belum ada pesanan.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {error && (
+        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
+      )}
+
+      <div className="mt-6">
+        <DataTable
+          columns={columns}
+          data={bookings}
+          loading={loading}
+          emptyState={{
+            title: 'Belum ada pesanan',
+            description: 'Pesanan dari pelanggan akan muncul di sini.',
+          }}
+          mobileCardRender={mobileCardRender}
+        />
       </div>
+
+      <Modal
+        open={modalAction !== null}
+        onClose={() => setModalAction(null)}
+        title={
+          modalAction?.action === 'approve'
+            ? 'Setujui Pesanan'
+            : 'Tolak Pesanan'
+        }
+        description={
+          modalAction?.action === 'approve'
+            ? `Apakah Anda yakin ingin menyetujui pesanan ${modalAction?.orderNumber ?? ''}?`
+            : `Apakah Anda yakin ingin menolak pesanan ${modalAction?.orderNumber ?? ''}? Tindakan ini tidak dapat dibatalkan.`
+        }
+        actions={{
+          confirm: {
+            label: modalAction?.action === 'approve' ? 'Setujui' : 'Tolak',
+            variant: modalAction?.action === 'approve' ? 'primary' : 'destructive',
+            onClick: handleAction,
+          },
+          cancel: {
+            label: 'Batal',
+          },
+        }}
+      />
+
+      {/* Hidden loading overlay for action in progress */}
+      {actionLoading && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20">
+          <div className="rounded-lg bg-white p-4 shadow-lg">
+            <p className="text-sm text-gray-700">Memproses...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

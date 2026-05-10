@@ -1,6 +1,14 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import Link from 'next/link';
 import { findListingBySlug } from '@/data/listing';
+import { computeSessionRemainingCapacity } from '@/data/session';
+import { Card } from '@/components/ui/card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { SkeletonLoader } from '@/components/ui/skeleton-loader';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListingDetailClient } from './listing-detail-client';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -15,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: listing.title,
+    title: `${listing.title} | Lelampahan`,
     description: listing.description,
     openGraph: {
       title: listing.title,
@@ -23,6 +31,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
     },
   };
+}
+
+function ListingDetailSkeleton() {
+  return (
+    <div className="py-6 space-y-6">
+      {/* Breadcrumb skeleton */}
+      <SkeletonLoader variant="text" lines={1} className="max-w-xs" />
+
+      {/* Image gallery skeleton */}
+      <SkeletonLoader variant="image" className="rounded-xl" />
+
+      {/* Content skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          <SkeletonLoader variant="text" lines={1} className="max-w-sm" />
+          <SkeletonLoader variant="text" lines={4} />
+        </div>
+        <div className="space-y-4">
+          <SkeletonLoader variant="card" />
+          <SkeletonLoader variant="card" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default async function ListingDetailPage({ params }: Props) {
@@ -35,55 +67,210 @@ export default async function ListingDetailPage({ params }: Props) {
   const listing = await findListingBySlug(slug).catch(() => null);
 
   if (!listing) {
-    return (
-      <section className="mx-auto max-w-4xl px-6 py-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-lelampahan-brick">
-          Lelampahan / Listing
-        </p>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-lelampahan-earth">
-          {slug.replace(/-/g, ' ')}
-        </h1>
-        <p className="mt-6 text-amber-950/70">Detail listing akan dimuat dari database.</p>
-      </section>
-    );
+    notFound();
   }
 
-  return (
-    <section className="mx-auto max-w-4xl px-6 py-10">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-lelampahan-brick">
-        Lelampahan / {listing.type}
-      </p>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight text-lelampahan-earth">
-        {listing.title}
-      </h1>
-      <p className="mt-6 text-amber-950/70">{listing.description}</p>
+  const typeLabel = listing.type === 'TOUR' ? 'Tour' : 'Event';
+  const typeBadgeStatus = listing.type === 'TOUR' ? 'info' : 'warning';
 
-      <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-lelampahan-earth">Jadwal Tersedia</h2>
-        {listing.sessions.length === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">Belum ada jadwal tersedia.</p>
-        ) : (
-          <div className="mt-4 space-y-3">
-            {listing.sessions.map((session) => (
-              <div key={session.id} className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {new Intl.DateTimeFormat('id-ID', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                      timeZone: listing.timezone,
-                    }).format(session.startsAt)}
-                  </p>
-                  <p className="text-sm text-gray-500">Kapasitas {session.capacity} peserta</p>
-                </div>
-                <a href={`/checkout?sessionId=${session.id}`} className="rounded-full bg-lelampahan-gold px-4 py-2 text-sm font-semibold text-white">
-                  Checkout
-                </a>
-              </div>
-            ))}
+  // Prepare sessions data for the client component
+  const sessionsForPicker = await Promise.all(
+    listing.sessions.map(async (session) => {
+      const remainingCapacity = await computeSessionRemainingCapacity(session.id);
+      return {
+        id: session.id,
+        startsAt: session.startsAt.toISOString(),
+        capacity: session.capacity,
+        remainingCapacity,
+        ticketTypes: session.ticketTypes.map((tt) => ({
+          id: tt.id,
+          name: tt.name,
+          price: tt.price,
+        })),
+      };
+    }),
+  );
+
+  return (
+    <Suspense fallback={<ListingDetailSkeleton />}>
+      <div className="py-6 space-y-6">
+        {/* Breadcrumb Navigation */}
+        <nav aria-label="Breadcrumb" className="text-sm text-gray-500">
+          <ol className="flex items-center gap-2">
+            <li>
+              <Link href="/" className="hover:text-lelampahan-gold transition-colors">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </li>
+            <li>
+              <Link href="/" className="hover:text-lelampahan-gold transition-colors">
+                Jelajahi
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </li>
+            <li>
+              <span className="text-lelampahan-earth font-medium">{listing.title}</span>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Image Gallery Section */}
+        <section aria-label="Galeri gambar listing">
+          <div className="aspect-video w-full rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+            {/* Placeholder - no images available yet */}
+            <div className="text-center text-gray-400">
+              <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+              </svg>
+              <p className="mt-2 text-sm">Belum ada gambar</p>
+            </div>
           </div>
-        )}
+        </section>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Listing Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Title and Type */}
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <StatusBadge status={typeBadgeStatus} label={typeLabel} size="md" />
+                {listing.tourDetail?.duration && (
+                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {listing.tourDetail.duration}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-lelampahan-earth">
+                {listing.title}
+              </h1>
+            </div>
+
+            {/* Location */}
+            {listing.eventDetail?.venue && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <svg className="h-5 w-5 text-lelampahan-gold" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span>{listing.eventDetail.venue}</span>
+              </div>
+            )}
+
+            {/* Description */}
+            <Card variant="outlined" padding="md">
+              <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Deskripsi</h2>
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {listing.description}
+              </p>
+            </Card>
+
+            {/* Tour Details - Itinerary, Included, Excluded */}
+            {listing.tourDetail && (
+              <div className="space-y-4">
+                {listing.tourDetail.itinerary && (
+                  <Card variant="outlined" padding="md">
+                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Itinerary</h2>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {typeof listing.tourDetail.itinerary === 'string'
+                        ? listing.tourDetail.itinerary
+                        : JSON.stringify(listing.tourDetail.itinerary, null, 2)}
+                    </p>
+                  </Card>
+                )}
+                {listing.tourDetail.included && (
+                  <Card variant="outlined" padding="md">
+                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Termasuk</h2>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {typeof listing.tourDetail.included === 'string'
+                        ? listing.tourDetail.included
+                        : JSON.stringify(listing.tourDetail.included, null, 2)}
+                    </p>
+                  </Card>
+                )}
+                {listing.tourDetail.excluded && (
+                  <Card variant="outlined" padding="md">
+                    <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Tidak Termasuk</h2>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {typeof listing.tourDetail.excluded === 'string'
+                        ? listing.tourDetail.excluded
+                        : JSON.stringify(listing.tourDetail.excluded, null, 2)}
+                    </p>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Event Details - Gate Notes */}
+            {listing.eventDetail?.gateNotes && (
+              <Card variant="outlined" padding="md">
+                <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">Informasi Gate</h2>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {listing.eventDetail.gateNotes}
+                </p>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Session Picker & Partner Info */}
+          <div className="space-y-6">
+            {/* Session Picker */}
+            <Card variant="elevated" padding="md">
+              <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Jadwal Tersedia</h2>
+              {sessionsForPicker.length === 0 ? (
+                <EmptyState
+                  title="Belum ada jadwal tersedia"
+                  description="Jadwal untuk listing ini belum tersedia. Silakan cek kembali nanti."
+                  illustration={
+                    <svg className="h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                  }
+                />
+              ) : (
+                <ListingDetailClient
+                  sessions={sessionsForPicker}
+                  timezone={listing.timezone}
+                />
+              )}
+            </Card>
+
+            {/* Partner/Organizer Info */}
+            <Card variant="outlined" padding="md">
+              <h2 className="text-lg font-semibold text-lelampahan-earth mb-3">
+                {listing.type === 'TOUR' ? 'Penyelenggara Tour' : 'Penyelenggara Event'}
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-lelampahan-gold/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-lelampahan-gold">
+                    {listing.partner.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{listing.partner.name}</p>
+                  {listing.partner.description && (
+                    <p className="text-sm text-gray-500 line-clamp-2 mt-0.5">
+                      {listing.partner.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
       </div>
-    </section>
+    </Suspense>
   );
 }

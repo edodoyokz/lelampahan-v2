@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { DataTable, type Column } from '@/components/ui/data-table';
+import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
 
 interface AdminListing {
   id: string;
@@ -11,103 +15,231 @@ interface AdminListing {
   _count?: { sessions: number };
 }
 
+type ModalAction = 'approve' | 'reject';
+
 export default function AdminListingPage() {
   const [listings, setListings] = useState<AdminListing[]>([]);
-  const [status, setStatus] = useState('Memuat listing...');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState<ModalAction>('approve');
+  const [selectedListing, setSelectedListing] = useState<AdminListing | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadListings = async () => {
-    const response = await fetch('/api/admin/listings', { cache: 'no-store' });
-    if (!response.ok) {
-      setStatus(response.status === 401 || response.status === 403 ? 'Akses admin diperlukan.' : 'Gagal memuat listing.');
-      return;
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/listings', { cache: 'no-store' });
+      if (!response.ok) {
+        setError(
+          response.status === 401 || response.status === 403
+            ? 'Akses admin diperlukan.'
+            : 'Gagal memuat listing.'
+        );
+        return;
+      }
+      const data = await response.json();
+      setListings(data.listings ?? []);
+    } catch {
+      setError('Gagal memuat listing.');
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    setListings(data.listings ?? []);
-    setStatus('');
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadListings();
   }, []);
 
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
-    const response = await fetch('/api/admin/listings/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ listingId: id, action }),
-    });
-
-    if (!response.ok) {
-      setStatus('Gagal menyimpan keputusan review.');
-      return;
-    }
-
-    setListings((prev) =>
-      prev.map((l) =>
-        l.id === id ? { ...l, status: action === 'approve' ? 'PUBLISHED' : 'REJECTED' } : l,
-      ),
-    );
+  const openModal = (listing: AdminListing, action: ModalAction) => {
+    setSelectedListing(listing);
+    setModalAction(action);
+    setModalOpen(true);
   };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedListing(null);
+    setActionLoading(false);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedListing) return;
+
+    setActionLoading(true);
+    try {
+      const response = await fetch('/api/admin/listings/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: selectedListing.id, action: modalAction }),
+      });
+
+      if (!response.ok) {
+        setError('Gagal menyimpan keputusan review.');
+        closeModal();
+        return;
+      }
+
+      setListings((prev) =>
+        prev.map((l) =>
+          l.id === selectedListing.id
+            ? { ...l, status: modalAction === 'approve' ? 'PUBLISHED' : 'REJECTED' }
+            : l
+        )
+      );
+      closeModal();
+    } catch {
+      setError('Gagal menyimpan keputusan review.');
+      closeModal();
+    }
+  };
+
+  const columns: Column<AdminListing>[] = [
+    {
+      key: 'title',
+      header: 'Judul',
+      render: (item) => (
+        <span className="font-medium text-gray-900">{item.title}</span>
+      ),
+    },
+    {
+      key: 'partner',
+      header: 'Partner',
+      render: (item) => (
+        <span className="text-gray-600">{item.partner?.name ?? '-'}</span>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Tipe',
+      render: (item) => <span className="text-gray-600">{item.type}</span>,
+    },
+    {
+      key: 'sessions',
+      header: 'Sesi',
+      render: (item) => (
+        <span className="text-gray-600">{item._count?.sessions ?? 0}</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (item) => (
+        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Aksi',
+      render: (item) =>
+        item.status === 'PENDING_REVIEW' ? (
+          <div className="flex gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => openModal(item, 'approve')}
+            >
+              Approve
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => openModal(item, 'reject')}
+            >
+              Reject
+            </Button>
+          </div>
+        ) : null,
+    },
+  ];
+
+  const mobileCardRender = (item: AdminListing) => (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-medium text-gray-900">{item.title}</p>
+          <p className="text-sm text-gray-500">{item.partner?.name ?? '-'}</p>
+        </div>
+        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+      </div>
+      <div className="flex items-center gap-4 text-sm text-gray-600">
+        <span>Tipe: {item.type}</span>
+        <span>Sesi: {item._count?.sessions ?? 0}</span>
+      </div>
+      {item.status === 'PENDING_REVIEW' && (
+        <div className="flex gap-2 pt-2 border-t border-gray-100">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => openModal(item, 'approve')}
+          >
+            Approve
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => openModal(item, 'reject')}
+          >
+            Reject
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-lelampahan-earth">Listing Review</h1>
-      <p className="mt-1 text-sm text-gray-500">Review listing yang menunggu persetujuan.</p>
-      {status && <p className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">{status}</p>}
+      <p className="mt-1 text-sm text-gray-500">
+        Review listing yang menunggu persetujuan.
+      </p>
 
-      <div className="mt-6 overflow-hidden rounded-lg bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th className="px-6 py-3 font-medium">Judul</th>
-              <th className="px-6 py-3 font-medium">Partner</th>
-              <th className="px-6 py-3 font-medium">Tipe</th>
-              <th className="px-6 py-3 font-medium">Sesi</th>
-              <th className="px-6 py-3 font-medium">Status</th>
-              <th className="px-6 py-3 font-medium">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {listings.map((l) => (
-              <tr key={l.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">{l.title}</td>
-                <td className="px-6 py-4 text-gray-500">{l.partner?.name ?? '-'}</td>
-                <td className="px-6 py-4 text-gray-500">{l.type}</td>
-                <td className="px-6 py-4 text-gray-500">{l._count?.sessions ?? 0}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      l.status === 'PUBLISHED'
-                        ? 'bg-green-100 text-green-800'
-                        : l.status === 'REJECTED'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                    }`}
-                  >
-                    {l.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  {l.status === 'PENDING_REVIEW' && (
-                    <div className="flex gap-2">
-                      <button onClick={() => handleAction(l.id, 'approve')} className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700">
-                        Publish
-                      </button>
-                      <button onClick={() => handleAction(l.id, 'reject')} className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700">
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {listings.length === 0 && !status && (
-              <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">Belum ada listing.</td></tr>
-            )}
-          </tbody>
-        </table>
+      {error && (
+        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
+      )}
+
+      <div className="mt-6">
+        <DataTable
+          columns={columns}
+          data={listings}
+          loading={loading}
+          emptyState={{
+            title: 'Tidak ada item yang menunggu review',
+            description: 'Semua listing sudah direview.',
+          }}
+          mobileCardRender={mobileCardRender}
+        />
       </div>
+
+      <Modal
+        open={modalOpen}
+        onClose={closeModal}
+        title={
+          modalAction === 'approve'
+            ? 'Konfirmasi Approve'
+            : 'Konfirmasi Reject'
+        }
+        description={
+          modalAction === 'approve'
+            ? `Apakah Anda yakin ingin meng-approve listing "${selectedListing?.title}"? Listing akan dipublikasikan.`
+            : `Apakah Anda yakin ingin me-reject listing "${selectedListing?.title}"? Listing tidak akan dipublikasikan.`
+        }
+        actions={{
+          confirm: {
+            label: modalAction === 'approve' ? 'Approve' : 'Reject',
+            variant: modalAction === 'approve' ? 'primary' : 'destructive',
+            onClick: handleConfirm,
+          },
+          cancel: {
+            label: 'Batal',
+            onClick: closeModal,
+          },
+        }}
+      />
     </div>
   );
 }

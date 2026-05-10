@@ -1,3 +1,4 @@
+import { OrderStatus, ReservationStatus } from '@prisma/client';
 import { prisma } from '@/db/prisma';
 
 export async function createSession(data: {
@@ -29,6 +30,41 @@ export async function findSessionsByListing(listingId: string) {
     include: { ticketTypes: true },
     orderBy: { startsAt: 'asc' },
   });
+}
+
+export async function computeSessionRemainingCapacity(sessionId: string): Promise<number> {
+  const now = new Date();
+
+  const [session, activeReserved, sold] = await Promise.all([
+    prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { capacity: true },
+    }),
+    prisma.reservation.aggregate({
+      where: {
+        sessionId,
+        status: ReservationStatus.ACTIVE,
+        expiresAt: { gt: now },
+      },
+      _sum: { quantity: true },
+    }),
+    prisma.orderItem.aggregate({
+      where: {
+        order: {
+          sessionId,
+          status: { in: [OrderStatus.PAID, OrderStatus.COMPLETED] },
+        },
+      },
+      _sum: { quantity: true },
+    }),
+  ]);
+
+  if (!session) return 0;
+
+  const soldQuantity = sold._sum.quantity ?? 0;
+  const reservedQuantity = activeReserved._sum.quantity ?? 0;
+
+  return Math.max(0, session.capacity - soldQuantity - reservedQuantity);
 }
 
 export async function replaceListingSessions(

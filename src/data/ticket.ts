@@ -1,5 +1,28 @@
 import { prisma } from '@/db/prisma';
 
+export async function findTicketsByUser(userId: string) {
+  return prisma.ticket.findMany({
+    where: { order: { userId } },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      order: {
+        include: {
+          session: {
+            include: {
+              listing: { select: { title: true } },
+            },
+          },
+          items: {
+            include: {
+              ticketType: { select: { name: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 export async function createTicket(data: {
   orderId: string;
   code: string;
