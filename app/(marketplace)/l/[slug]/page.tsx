@@ -14,6 +14,17 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+interface ListingSessionForPicker {
+  id: string;
+  startsAt: Date;
+  capacity: number;
+  ticketTypes: Array<{
+    id: string;
+    name: string;
+    price: number;
+  }>;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const listing = await findListingBySlug(slug).catch(() => null);
@@ -75,7 +86,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
   // Prepare sessions data for the client component
   const sessionsForPicker = await Promise.all(
-    listing.sessions.map(async (session) => {
+    listing.sessions.map(async (session: ListingSessionForPicker) => {
       const remainingCapacity = await computeSessionRemainingCapacity(session.id);
       return {
         id: session.id,
