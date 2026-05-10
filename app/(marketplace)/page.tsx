@@ -3,6 +3,18 @@ import { listPublishedListings } from '@/data/listing';
 import { MarketplaceHomepageContent } from './homepage-content';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 
+interface PublishedListingForHome {
+  id: string;
+  slug: string;
+  title: string;
+  type: string;
+  eventDetail?: { venue: string | null } | null;
+  partner: { name: string };
+  sessions: Array<{
+    ticketTypes: Array<{ price: number }>;
+  }>;
+}
+
 function ListingsGridSkeleton() {
   return (
     <div className="py-10">
@@ -32,7 +44,7 @@ async function ListingsContent() {
     // Return empty listings on error
   }
 
-  const mappedListings = listings.map((listing) => {
+  const mappedListings = (listings as PublishedListingForHome[]).map((listing) => {
     const firstTicketType = listing.sessions[0]?.ticketTypes[0];
     return {
       id: listing.id,
