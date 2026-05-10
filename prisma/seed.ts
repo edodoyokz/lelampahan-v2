@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { config } from 'dotenv';
+import { readFile, stat } from 'fs/promises';
+import path from 'path';
 
 config({ path: '.env' });
 
@@ -15,6 +18,88 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg(connectionString),
   log: ['error'],
 });
+
+function requireEnv(name: string) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required for seed image upload`);
+  }
+
+  return value;
+}
+
+function getR2Endpoint() {
+  return process.env.R2_ENDPOINT ?? `https://${requireEnv('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`;
+}
+
+function getR2PublicUrl(key: string) {
+  const baseUrl = requireEnv('R2_PUBLIC_BASE_URL').replace(/\/$/, '');
+  return `${baseUrl}/${key}`;
+}
+
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: getR2Endpoint(),
+  credentials: {
+    accessKeyId: requireEnv('R2_ACCESS_KEY_ID'),
+    secretAccessKey: requireEnv('R2_SECRET_ACCESS_KEY'),
+  },
+});
+
+async function uploadSeedListingImage(input: {
+  listingId: string;
+  title: string;
+  filename: string;
+}) {
+  const key = `listings/seed/${input.filename}`;
+  const filePath = path.join(process.cwd(), 'prisma', 'seed-assets', 'listings', input.filename);
+  const [body, fileStat] = await Promise.all([readFile(filePath), stat(filePath)]);
+
+  await r2Client.send(
+    new PutObjectCommand({
+      Bucket: requireEnv('R2_BUCKET_NAME'),
+      Key: key,
+      Body: body,
+      ContentType: 'image/webp',
+      ContentLength: fileStat.size,
+      CacheControl: 'public, max-age=31536000, immutable',
+    }),
+  );
+
+  await prisma.listingImage.updateMany({
+    where: { listingId: input.listingId, isCover: true, key: { not: key } },
+    data: { isCover: false },
+  });
+
+  await prisma.listingImage.upsert({
+    where: { key },
+    update: {
+      listingId: input.listingId,
+      url: getR2PublicUrl(key),
+      alt: input.title,
+      sortOrder: 0,
+      isCover: true,
+      mimeType: 'image/webp',
+      sizeBytes: fileStat.size,
+      width: 1280,
+      height: 720,
+    },
+    create: {
+      listingId: input.listingId,
+      key,
+      url: getR2PublicUrl(key),
+      alt: input.title,
+      sortOrder: 0,
+      isCover: true,
+      mimeType: 'image/webp',
+      sizeBytes: fileStat.size,
+      width: 1280,
+      height: 720,
+    },
+  });
+
+  return getR2PublicUrl(key);
+}
 
 async function main() {
   console.log('🌱 Seeding Lelampahan...');
@@ -122,6 +207,21 @@ async function main() {
     },
   });
   console.log('  ✅ Listing:', eventListing.title);
+
+  // ---- Listing Images: upload generated seed assets to Cloudflare R2 ----
+  await Promise.all([
+    uploadSeedListingImage({
+      listingId: tourListing.id,
+      title: tourListing.title,
+      filename: 'jelajah-kotagede-heritage.webp',
+    }),
+    uploadSeedListingImage({
+      listingId: eventListing.id,
+      title: eventListing.title,
+      filename: 'workshop-batik-tulis.webp',
+    }),
+  ]);
+  console.log('  ✅ Listing images uploaded to R2');
 
   // ---- Sessions: Jelajah Kotagede ----
   const tourSessions = await Promise.all([
