@@ -8,6 +8,15 @@ import { Button } from '@/components/ui/button';
 
 const supabase = createSupabaseBrowserClient();
 
+const demoAccounts = [
+  { label: 'Pelanggan', email: 'customer@lelampahan.test' },
+  { label: 'Admin', email: 'admin@lelampahan.test' },
+  { label: 'Super Admin', email: 'superadmin@lelampahan.test' },
+  { label: 'Partner', email: 'partner@lelampahan.test' },
+];
+
+
+
 function mapAuthError(message: string) {
   const normalized = message.toLowerCase();
 
@@ -27,10 +36,18 @@ function mapAuthError(message: string) {
 }
 
 export default function LoginPage() {
+  const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? 'Password123!';
+  const demoLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleDemoSelect = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError(null);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +181,34 @@ export default function LoginPage() {
               Masuk
             </Button>
           </form>
+
+          {demoLoginEnabled && (
+            <div className="mt-6 rounded-xl border border-lelampahan-gold/30 bg-lelampahan-cream/60 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-lelampahan-earth">Akun Demo</h3>
+                  <p className="mt-1 text-xs text-gray-600">
+                    Pilih role untuk mengisi email dan kata sandi demo.
+                  </p>
+                </div>
+                <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lelampahan-brick">
+                  Demo
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {demoAccounts.map((account) => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    onClick={() => handleDemoSelect(account.email)}
+                    className="rounded-lg border border-lelampahan-gold/30 bg-white px-3 py-2 text-sm font-medium text-lelampahan-earth transition-colors hover:bg-lelampahan-gold/10"
+                  >
+                    {account.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Navigation link to register */}
           <p className="mt-6 text-center text-sm text-gray-600">
