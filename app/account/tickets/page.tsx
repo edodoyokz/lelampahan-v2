@@ -6,6 +6,7 @@ import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { findTicketsByUser } from '@/data/ticket';
 import { redirect } from 'next/navigation';
+import { Ticket } from 'lucide-react';
 
 function TicketsLoading() {
   return (
@@ -30,7 +31,7 @@ async function TicketsList() {
   if (tickets.length === 0) {
     return (
       <EmptyState
-        illustration={<span className="text-5xl">🎫</span>}
+        illustration={<Ticket className="h-12 w-12 text-gray-400" strokeWidth={1.6} aria-hidden="true" />}
         title="Belum ada tiket"
         description="Tiket QR yang sudah dibeli akan muncul di sini."
         action={{ label: 'Jelajahi Listing', href: '/' }}

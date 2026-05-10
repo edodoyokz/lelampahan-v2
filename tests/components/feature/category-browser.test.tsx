@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CategoryBrowser, Category } from '@/components/feature/category-browser';
+import { CalendarDays, Compass, LayoutGrid } from 'lucide-react';
 
 const categories: Category[] = [
-  { label: 'Semua', value: '', icon: '🏠' },
-  { label: 'Tour', value: 'TOUR', icon: '🗺️' },
-  { label: 'Event', value: 'EVENT', icon: '🎉' },
+  { label: 'Semua', value: '', icon: <LayoutGrid data-testid="icon-semua" /> },
+  { label: 'Tour', value: 'TOUR', icon: <Compass data-testid="icon-tour" /> },
+  { label: 'Event', value: 'EVENT', icon: <CalendarDays data-testid="icon-event" /> },
 ];
 
 describe('CategoryBrowser', () => {
@@ -21,9 +22,9 @@ describe('CategoryBrowser', () => {
     it('renders category icons', () => {
       render(<CategoryBrowser categories={categories} onSelect={() => {}} />);
 
-      expect(screen.getByText('🏠')).toBeInTheDocument();
-      expect(screen.getByText('🗺️')).toBeInTheDocument();
-      expect(screen.getByText('🎉')).toBeInTheDocument();
+      expect(screen.getByTestId('icon-semua')).toBeInTheDocument();
+      expect(screen.getByTestId('icon-tour')).toBeInTheDocument();
+      expect(screen.getByTestId('icon-event')).toBeInTheDocument();
     });
 
     it('renders a listbox with correct aria-label', () => {

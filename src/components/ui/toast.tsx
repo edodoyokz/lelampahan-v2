@@ -6,6 +6,7 @@ import React, {
   useContext,
   useState,
 } from 'react';
+import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 
 export interface ToastProps {
   type: 'success' | 'error' | 'info';
@@ -30,13 +31,15 @@ const typeClasses: Record<ToastProps['type'], string> = {
   info: 'bg-blue-100 border-blue-500 text-blue-800',
 };
 
-const typeIcons: Record<ToastProps['type'], string> = {
-  success: '✓',
-  error: '✕',
-  info: 'ℹ',
+const typeIcons: Record<ToastProps['type'], React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
+  success: CheckCircle,
+  error: AlertCircle,
+  info: Info,
 };
 
 function ToastMessage({ toast, onRemove }: { toast: ToastItem; onRemove: (id: string) => void }) {
+  const Icon = typeIcons[toast.type];
+
   return (
     <div
       role="alert"
@@ -49,16 +52,14 @@ function ToastMessage({ toast, onRemove }: { toast: ToastItem; onRemove: (id: st
         ${typeClasses[toast.type]}
       `.trim()}
     >
-      <span className="text-lg font-bold" aria-hidden="true">
-        {typeIcons[toast.type]}
-      </span>
+      <Icon className="h-5 w-5 shrink-0" aria-hidden={true} />
       <p className="text-sm font-medium flex-1">{toast.message}</p>
       <button
         onClick={() => onRemove(toast.id)}
         className="text-current opacity-60 hover:opacity-100 transition-opacity"
         aria-label="Tutup notifikasi"
       >
-        ✕
+        <X className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );

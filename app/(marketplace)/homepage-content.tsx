@@ -5,11 +5,12 @@ import { HeroSection } from '@/components/feature/hero-section';
 import { CategoryBrowser, type Category } from '@/components/feature/category-browser';
 import { ListingCard, type ListingCardProps } from '@/components/feature/listing-card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { CalendarDays, Compass, LayoutGrid, Search } from 'lucide-react';
 
 const categories: Category[] = [
-  { label: 'Semua', value: '', icon: '🏠' },
-  { label: 'Tour', value: 'TOUR', icon: '🗺️' },
-  { label: 'Event', value: 'EVENT', icon: '🎉' },
+  { label: 'Semua', value: '', icon: <LayoutGrid className="h-5 w-5" strokeWidth={1.8} /> },
+  { label: 'Tour', value: 'TOUR', icon: <Compass className="h-5 w-5" strokeWidth={1.8} /> },
+  { label: 'Event', value: 'EVENT', icon: <CalendarDays className="h-5 w-5" strokeWidth={1.8} /> },
 ];
 
 interface MarketplaceHomepageContentProps {
@@ -73,9 +74,7 @@ export function MarketplaceHomepageContent({ listings }: MarketplaceHomepageCont
         ) : (
           <EmptyState
             illustration={
-              <span className="text-5xl" role="img" aria-label="Tidak ada listing">
-                🔍
-              </span>
+              <Search className="h-12 w-12 text-gray-400" strokeWidth={1.6} aria-hidden="true" />
             }
             title="Tidak ada listing ditemukan"
             description={

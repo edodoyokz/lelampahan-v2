@@ -35,13 +35,16 @@ export default function SessionsPage() {
   const params = useParams();
   const listingId = params.id as string;
   const [sessions, setSessions] = useState<SessionData[]>([emptySession()]);
-  const [status, setStatus] = useState<string | null>('Memuat sesi...');
+  const [status, setStatus] = useState<{ message: string; type: 'success' | 'info' } | null>({
+    message: 'Memuat sesi...',
+    type: 'info',
+  });
 
   const loadSessions = useCallback(async () => {
-    setStatus('Memuat sesi...');
+    setStatus({ message: 'Memuat sesi...', type: 'info' });
     const response = await fetch(`/api/listing/${listingId}/sessions`, { cache: 'no-store' });
     if (!response.ok) {
-      setStatus('Gagal memuat sesi.');
+      setStatus({ message: 'Gagal memuat sesi.', type: 'info' });
       return;
     }
 
@@ -64,7 +67,7 @@ export default function SessionsPage() {
       );
     }
 
-    setStatus('');
+    setStatus(null);
   }, [listingId]);
 
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function SessionsPage() {
   };
 
   const handleSave = async () => {
-    setStatus('Menyimpan sesi...');
+    setStatus({ message: 'Menyimpan sesi...', type: 'info' });
     const response = await fetch(`/api/listing/${listingId}/sessions`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -114,11 +117,11 @@ export default function SessionsPage() {
     });
 
     if (!response.ok) {
-      setStatus('Gagal menyimpan sesi.');
+      setStatus({ message: 'Gagal menyimpan sesi.', type: 'info' });
       return;
     }
 
-    setStatus('Sesi berhasil disimpan ✅');
+    setStatus({ message: 'Sesi berhasil disimpan.', type: 'success' });
   };
 
   return (
@@ -131,12 +134,12 @@ export default function SessionsPage() {
       {status && (
         <p
           className={`mt-4 rounded-lg p-3 text-sm ${
-            status.includes('✅')
+            status.type === 'success'
               ? 'bg-green-50 text-green-800'
               : 'bg-blue-50 text-blue-800'
           }`}
         >
-          {status}
+          {status.message}
         </p>
       )}
 

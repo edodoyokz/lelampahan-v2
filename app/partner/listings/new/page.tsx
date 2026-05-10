@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { CalendarCheck, ClipboardList, Compass, X } from 'lucide-react';
 
 type ListingType = 'TOUR' | 'EVENT';
 type BookingMode = 'INSTANT_CONFIRMATION' | 'REQUEST_TO_BOOK';
@@ -240,7 +241,7 @@ export default function NewListingPage() {
       });
 
       if (res.ok) {
-        setResult('Listing berhasil dibuat ✅');
+        setResult('Listing berhasil dibuat.');
         setTitle('');
         setDescription('');
         setCoverImageFile(null);
@@ -342,7 +343,8 @@ export default function NewListingPage() {
                       : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  🗺️ Tour
+                  <Compass className="h-4 w-4" aria-hidden="true" />
+                  Tour
                 </button>
                 <button
                   type="button"
@@ -353,7 +355,8 @@ export default function NewListingPage() {
                       : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  🎉 Event
+                  <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                  Event
                 </button>
               </div>
             </div>
@@ -370,7 +373,8 @@ export default function NewListingPage() {
                       : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  ⚡ Instant Confirmation
+                  <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                  Instant Confirmation
                 </button>
                 <button
                   type="button"
@@ -381,7 +385,8 @@ export default function NewListingPage() {
                       : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  📋 Request to Book
+                  <ClipboardList className="h-4 w-4" aria-hidden="true" />
+                  Request to Book
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
@@ -450,7 +455,7 @@ export default function NewListingPage() {
                           className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
                           aria-label="Hapus item itinerary"
                         >
-                          ✕
+                          <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                       )}
                     </div>
@@ -647,7 +652,7 @@ export default function NewListingPage() {
         {result && (
           <div
             className={`rounded-lg p-4 text-sm ${
-              result.includes('✅')
+              result === 'Listing berhasil dibuat.'
                 ? 'border border-green-200 bg-green-50 text-green-800'
                 : 'border border-red-200 bg-red-50 text-red-800'
             }`}

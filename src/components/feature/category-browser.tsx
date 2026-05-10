@@ -51,7 +51,7 @@ export function CategoryBrowser({
               }
             `.trim()}
           >
-            <span className="text-2xl" aria-hidden="true">
+            <span className={isActive ? 'text-lelampahan-gold' : 'text-gray-500'} aria-hidden="true">
               {category.icon}
             </span>
             <span
