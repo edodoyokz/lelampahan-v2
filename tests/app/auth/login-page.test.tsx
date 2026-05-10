@@ -23,8 +23,16 @@ describe('LoginPage demo accounts', () => {
     process.env.NEXT_PUBLIC_DEMO_PASSWORD = originalDemoPassword;
   });
 
-  it('hides demo account buttons by default', () => {
+  it('shows demo account buttons by default outside production', () => {
     delete process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN;
+
+    render(<LoginPage />);
+
+    expect(screen.getByText('Akun Demo')).toBeInTheDocument();
+  });
+
+  it('hides demo account buttons when explicitly disabled', () => {
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN = 'false';
 
     render(<LoginPage />);
 

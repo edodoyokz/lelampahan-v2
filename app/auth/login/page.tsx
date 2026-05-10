@@ -37,7 +37,9 @@ function mapAuthError(message: string) {
 
 export default function LoginPage() {
   const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? 'Password123!';
-  const demoLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true';
+  const demoLoginEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true' ||
+    (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN !== 'false');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
