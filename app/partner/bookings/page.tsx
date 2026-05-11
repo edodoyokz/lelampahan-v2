@@ -38,6 +38,7 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [summary, setSummary] = useState({ requested: 0, pendingPayment: 0, approved: 0, completed: 0 });
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -57,6 +58,7 @@ export default function BookingsPage() {
     const data = await response.json();
     setBookings(data.orders ?? []);
     setTotalItems(data.total ?? 0);
+    setSummary(data.summary ?? { requested: 0, pendingPayment: 0, approved: 0, completed: 0 });
     setLoading(false);
   }, [page, statusFilter]);
 
@@ -213,18 +215,14 @@ export default function BookingsPage() {
     </div>
   );
 
-  const requestedCount = bookings.filter((booking) => booking.status === 'REQUESTED').length;
-  const pendingPaymentCount = bookings.filter((booking) => booking.status === 'PENDING_PAYMENT').length;
-  const approvedCount = bookings.filter((booking) => ['PARTNER_APPROVED', 'PAID', 'COMPLETED'].includes(booking.status)).length;
-
   return (
     <div>
       <PageHeader title="Pesanan & Permintaan Booking" description="Kelola pesanan masuk dan request-to-book." />
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Permintaan" value={requestedCount} />
-        <StatCard label="Menunggu Pembayaran" value={pendingPaymentCount} />
-        <StatCard label="Disetujui/Selesai" value={approvedCount} />
+        <StatCard label="Permintaan" value={summary.requested} />
+        <StatCard label="Menunggu Pembayaran" value={summary.pendingPayment} />
+        <StatCard label="Disetujui/Selesai" value={summary.approved + summary.completed} />
       </div>
 
       <div className="mt-6">

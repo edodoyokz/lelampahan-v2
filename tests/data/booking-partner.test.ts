@@ -11,7 +11,7 @@ vi.mock('@/db/prisma', () => ({
   },
 }));
 
-import { findOrdersByPartnerId } from '@/data/booking';
+import { findOrdersByPartnerId, getPartnerBookingSummary } from '@/data/booking';
 
 describe('partner bookings', () => {
   beforeEach(() => {
@@ -62,5 +62,40 @@ describe('partner bookings', () => {
         where: { session: { listing: { partnerId: 'partner-1' } }, status: 'PAID' },
       }),
     );
+  });
+
+  describe('getPartnerBookingSummary', () => {
+    it('returns status counts for a partner', async () => {
+      mocks.orderCount
+        .mockResolvedValueOnce(3)  // pendingPayment
+        .mockResolvedValueOnce(4)  // approved (PAID)
+        .mockResolvedValueOnce(5); // completed
+
+      await expect(getPartnerBookingSummary('partner-1')).resolves.toEqual({
+        requested: 0,
+        pendingPayment: 3,
+        approved: 4,
+        completed: 5,
+      });
+
+      expect(mocks.orderCount).toHaveBeenCalledWith({
+        where: {
+          session: { listing: { partnerId: 'partner-1' } },
+          status: 'PENDING_PAYMENT',
+        },
+      });
+      expect(mocks.orderCount).toHaveBeenCalledWith({
+        where: {
+          session: { listing: { partnerId: 'partner-1' } },
+          status: 'PAID',
+        },
+      });
+      expect(mocks.orderCount).toHaveBeenCalledWith({
+        where: {
+          session: { listing: { partnerId: 'partner-1' } },
+          status: 'COMPLETED',
+        },
+      });
+    });
   });
 });

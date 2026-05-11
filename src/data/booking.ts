@@ -228,6 +228,16 @@ export async function findOrdersByPartnerId(partnerId: string, status?: string, 
   return { orders, total };
 }
 
+export async function getPartnerBookingSummary(partnerId: string) {
+  const where = { session: { listing: { partnerId } } };
+  const [pendingPayment, approved, completed] = await Promise.all([
+    prisma.order.count({ where: { ...where, status: OrderStatus.PENDING_PAYMENT } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.PAID } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.COMPLETED } }),
+  ]);
+  return { requested: 0, pendingPayment, approved, completed };
+}
+
 export async function updateOrderStatus(id: string, status: OrderStatus) {
   return prisma.order.update({
     where: { id },

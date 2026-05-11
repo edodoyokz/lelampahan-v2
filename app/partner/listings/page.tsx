@@ -54,6 +54,7 @@ export default function ListingManagement() {
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('pageSize', String(DEFAULT_PAGE_SIZE));
+    if (statusFilter !== 'ALL') params.set('status', statusFilter);
     const response = await fetch(
       `/api/partner/${partnerContext.partner.id}/listings?${params.toString()}`,
       { cache: 'no-store' }
@@ -87,7 +88,7 @@ export default function ListingManagement() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadPengalaman();
-  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: Column<PartnerListing>[] = [
     {
@@ -191,8 +192,6 @@ export default function ListingManagement() {
     );
   }
 
-  const filteredListings = statusFilter === 'ALL' ? listings : listings.filter((listing) => listing.status === statusFilter);
-
   return (
     <div>
       <PageHeader title="Pengalaman" description={context ? `${context.partner.name} · ${context.role} · ${context.partner.status}` : 'Kelola pengalaman yang Anda tawarkan.'} action={{ label: '+ Listing Baru', href: '/partner/listings/new' }} />
@@ -217,7 +216,7 @@ export default function ListingManagement() {
       <div className="mt-6">
         <DataTable<PartnerListing>
           columns={columns}
-          data={filteredListings}
+          data={listings}
           loading={loading}
           mobileCardRender={mobileCardRender}
           emptyState={{

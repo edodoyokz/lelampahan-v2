@@ -174,19 +174,21 @@ export async function listListingsForAdmin(status?: string, page?: number, pageS
   return { listings, total };
 }
 
-export async function listListingsForPartner(partnerId: string, page?: number, pageSize?: number) {
+export async function listListingsForPartner(partnerId: string, status?: string, page?: number, pageSize?: number) {
   const skip = page && pageSize ? (page - 1) * pageSize : undefined;
+  const where = {
+    partnerId,
+    ...(status ? { status: status as ReviewStatus } : {}),
+  };
   const [listings, total] = await Promise.all([
     prisma.listing.findMany({
-      where: { partnerId },
+      where,
       include: { _count: { select: { sessions: true } } },
       orderBy: { createdAt: 'desc' },
       skip,
       take: pageSize,
     }),
-    prisma.listing.count({
-      where: { partnerId },
-    }),
+    prisma.listing.count({ where }),
   ]);
   return { listings, total };
 }
