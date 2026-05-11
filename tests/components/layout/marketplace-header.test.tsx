@@ -13,6 +13,14 @@ vi.mock('@/components/ui/mobile-drawer', () => ({
     open ? <div data-testid="mobile-drawer">{children}</div> : null,
 }));
 
+const signOut = vi.fn();
+
+vi.mock('@/lib/supabase/browser-client', () => ({
+  createSupabaseBrowserClient: () => ({
+    auth: { signOut },
+  }),
+}));
+
 describe('MarketplaceHeader', () => {
   it('renders logo text "Lelampahan"', () => {
     render(<MarketplaceHeader />);
@@ -51,5 +59,26 @@ describe('MarketplaceHeader', () => {
     render(<MarketplaceHeader user={{ name: 'Budi Santoso' }} />);
     const initials = screen.getAllByText('B');
     expect(initials.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows Dashboard link for authenticated users', () => {
+    render(<MarketplaceHeader user={{ name: 'Admin', dashboardHref: '/admin' }} />);
+
+    const dashboardLinks = screen.getAllByText('Dashboard');
+    expect(dashboardLinks.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('Dashboard link uses provided dashboardHref', () => {
+    render(<MarketplaceHeader user={{ name: 'Partner', dashboardHref: '/partner' }} />);
+
+    const links = screen.getAllByRole('link', { name: 'Dashboard' });
+    expect(links[0]).toHaveAttribute('href', '/partner');
+  });
+
+  it('shows Keluar (logout) button for authenticated users', () => {
+    render(<MarketplaceHeader user={{ name: 'Budi' }} />);
+
+    const logoutButtons = screen.getAllByText('Keluar');
+    expect(logoutButtons.length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -4,9 +4,16 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { MobileDrawer } from '@/components/ui/mobile-drawer';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client';
 
 export interface MarketplaceHeaderProps {
-  user?: { name: string; avatarUrl?: string } | null;
+  user?: { name: string; avatarUrl?: string; dashboardHref?: string } | null;
+}
+
+async function handleLogout() {
+  const supabase = createSupabaseBrowserClient();
+  await supabase.auth.signOut();
+  window.location.assign('/');
 }
 
 const navLinks = [
@@ -45,22 +52,34 @@ export function MarketplaceHeader({ user }: MarketplaceHeaderProps) {
         {/* Desktop Auth / User */}
         <div className="hidden md:flex items-center gap-3">
           {user ? (
-            <div className="flex items-center gap-2">
-              {user.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.name}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-lelampahan-gold text-white text-sm font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+            <>
+              <div className="flex items-center gap-2">
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-lelampahan-gold text-white text-sm font-semibold">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-lelampahan-earth">
+                  {user.name}
+                </span>
+              </div>
+              {user.dashboardHref && (
+                <Link href={user.dashboardHref}>
+                  <Button variant="ghost" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
               )}
-              <span className="text-sm font-medium text-lelampahan-earth">
-                {user.name}
-              </span>
-            </div>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                Keluar
+              </Button>
+            </>
           ) : (
             <>
               <Link href="/auth/login">
@@ -149,21 +168,39 @@ export function MarketplaceHeader({ user }: MarketplaceHeaderProps) {
           {/* Drawer Auth / User */}
           <div className="mt-auto border-t border-gray-200 px-4 py-4">
             {user ? (
-              <div className="flex items-center gap-3">
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.name}
-                    className="h-9 w-9 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-lelampahan-gold text-white text-sm font-semibold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="h-9 w-9 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-lelampahan-gold text-white text-sm font-semibold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-lelampahan-earth">
+                    {user.name}
+                  </span>
+                </div>
+                {user.dashboardHref && (
+                  <Link
+                    href={user.dashboardHref}
+                    onClick={() => setDrawerOpen(false)}
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-lelampahan-brick hover:bg-lelampahan-cream transition-colors"
+                  >
+                    Dashboard
+                  </Link>
                 )}
-                <span className="text-sm font-medium text-lelampahan-earth">
-                  {user.name}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => { setDrawerOpen(false); void handleLogout(); }}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-left text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  Keluar
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
