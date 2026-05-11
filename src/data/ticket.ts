@@ -73,9 +73,15 @@ export async function recordCheckIn(data: {
   });
 }
 
-export async function markTicketCheckedInDb(ticketId: string) {
-  return prisma.ticket.update({
-    where: { id: ticketId },
-    data: { status: 'CHECKED_IN', checkedInAt: new Date() },
+export async function markTicketCheckedInIfIssued(ticketId: string, checkedInAt = new Date()) {
+  const result = await prisma.ticket.updateMany({
+    where: { id: ticketId, status: 'ISSUED' },
+    data: { status: 'CHECKED_IN', checkedInAt },
   });
+  return result.count === 1;
+}
+
+export async function markTicketCheckedInDb(ticketId: string) {
+  await markTicketCheckedInIfIssued(ticketId);
+  return prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
 }

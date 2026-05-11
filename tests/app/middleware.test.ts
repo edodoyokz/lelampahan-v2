@@ -11,7 +11,7 @@ vi.mock('@supabase/ssr', () => ({
   }),
 }));
 
-import { middleware } from '../../app/middleware';
+import { proxy } from '../../proxy';
 
 function request(pathname: string) {
   return new NextRequest(new URL(`https://lelampahan.test${pathname}`));
@@ -23,7 +23,7 @@ describe('middleware admin access', () => {
   it('redirects regular admin away from super admin routes', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { app_metadata: { role: 'ADMIN' } } } });
 
-    const response = await middleware(request('/admin/users'));
+    const response = await proxy(request('/admin/users'));
 
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('https://lelampahan.test/admin');
@@ -32,7 +32,7 @@ describe('middleware admin access', () => {
   it('allows super admin to access super admin routes', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { app_metadata: { role: 'SUPER_ADMIN' } } } });
 
-    const response = await middleware(request('/admin/audit'));
+    const response = await proxy(request('/admin/audit'));
 
     expect(response.status).toBe(200);
     expect(response.headers.get('location')).toBeNull();
