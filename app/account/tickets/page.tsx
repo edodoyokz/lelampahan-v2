@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { PageHeader } from '@/components/ui/page-header';
+import { formatTicketStatusLabel } from '@/lib/status-labels';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { findTicketsByUser } from '@/data/ticket';
 import { redirect } from 'next/navigation';
@@ -45,7 +46,7 @@ export default async function TicketWalletPage() {
                         {new Date(session.startsAt).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                       <p className="text-sm text-gray-500">{ticketTypeName}</p>
-                      <StatusBadge status={getStatusVariant(ticket.status)} label={ticket.status} />
+                      <StatusBadge status={getStatusVariant(ticket.status)} label={formatTicketStatusLabel(ticket.status)} />
                     </div>
                     <div className="flex flex-col items-center gap-2">
                       <div className="rounded-xl border border-dashed border-lelampahan-gold bg-white p-3">

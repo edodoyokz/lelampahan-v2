@@ -7,6 +7,7 @@ import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { PageHeader } from '@/components/ui/page-header';
+import { formatListingStatusLabel } from '@/lib/status-labels';
 
 interface PartnerListing {
   id: string;
@@ -109,7 +110,7 @@ export default function ListingManagement() {
       render: (item) => (
         <StatusBadge
           status={getStatusVariant(item.status)}
-          label={item.status}
+          label={formatListingStatusLabel(item.status)}
         />
       ),
     },
@@ -155,7 +156,7 @@ export default function ListingManagement() {
         </div>
         <StatusBadge
           status={getStatusVariant(item.status)}
-          label={item.status}
+          label={formatListingStatusLabel(item.status)}
         />
       </div>
       <div className="flex items-center justify-between text-sm text-gray-500">

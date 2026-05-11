@@ -14,10 +14,11 @@ describe('Partner listings page', () => {
     render(<ListingManagement />);
     expect((await screen.findAllByText('Draft Tour')).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Semua')).toBeInTheDocument();
-    expect(screen.getByText('Draft')).toBeInTheDocument();
-    expect(screen.getByText('Review')).toBeInTheDocument();
-    expect(screen.getByText('Terbit')).toBeInTheDocument();
-    expect(screen.getByText('Ditolak')).toBeInTheDocument();
+    // Filter tab and status badge both show Indonesian labels
+    expect(screen.getAllByText('Draft').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Review').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Terbit').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Ditolak').length).toBeGreaterThanOrEqual(1);
   });
 
   it('sends status filter to server on filter change', async () => {

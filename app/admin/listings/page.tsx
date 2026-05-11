@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { SearchInput } from '@/components/ui/search-input';
+import { formatListingStatusLabel } from '@/lib/status-labels';
 
 interface AdminListing {
   id: string;
@@ -144,7 +145,7 @@ export default function AdminListingPage() {
       key: 'status',
       header: 'Status',
       render: (item) => (
-        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+        <StatusBadge status={getStatusVariant(item.status)} label={formatListingStatusLabel(item.status)} />
       ),
     },
     {
@@ -179,7 +180,7 @@ export default function AdminListingPage() {
           <p className="font-medium text-gray-900">{item.title}</p>
           <p className="text-sm text-gray-500">{item.partner?.name ?? '-'}</p>
         </div>
-        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+        <StatusBadge status={getStatusVariant(item.status)} label={formatListingStatusLabel(item.status)} />
       </div>
       <div className="flex items-center gap-4 text-sm text-gray-600">
         <span>Tipe: {item.type}</span>

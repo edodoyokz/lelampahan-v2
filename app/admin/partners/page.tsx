@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { SearchInput } from '@/components/ui/search-input';
+import { formatPartnerStatusLabel } from '@/lib/status-labels';
 
 interface PartnerCapability {
   type: string;
@@ -133,7 +134,7 @@ export default function AdminPartnerPage() {
       key: 'status',
       header: 'Status',
       render: (item) => (
-        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+        <StatusBadge status={getStatusVariant(item.status)} label={formatPartnerStatusLabel(item.status)} />
       ),
     },
     {
@@ -172,7 +173,7 @@ export default function AdminPartnerPage() {
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="font-medium text-gray-900">{item.name}</span>
-        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+        <StatusBadge status={getStatusVariant(item.status)} label={formatPartnerStatusLabel(item.status)} />
       </div>
       {item.description && (
         <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>

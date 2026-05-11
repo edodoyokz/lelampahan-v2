@@ -9,6 +9,7 @@ import { formatIDR } from '@/lib/format-currency';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
+import { formatOrderStatusLabel } from '@/lib/status-labels';
 
 interface BookingItem {
   id: string;
@@ -123,7 +124,7 @@ export default function BookingsPage() {
       key: 'status',
       header: 'Status',
       render: (item) => (
-        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+        <StatusBadge status={getStatusVariant(item.status)} label={formatOrderStatusLabel(item.status)} />
       ),
     },
     {
@@ -174,7 +175,7 @@ export default function BookingsPage() {
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs text-gray-900">{item.orderNumber}</span>
-        <StatusBadge status={getStatusVariant(item.status)} label={item.status} />
+        <StatusBadge status={getStatusVariant(item.status)} label={formatOrderStatusLabel(item.status)} />
       </div>
       <div className="space-y-1">
         <p className="text-sm font-medium text-gray-900">
