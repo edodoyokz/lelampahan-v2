@@ -1,26 +1,12 @@
-import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { SkeletonLoader } from '@/components/ui/skeleton-loader';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatCard } from '@/components/ui/stat-card';
+import { QuickActionCard } from '@/components/ui/quick-action-card';
 
-function ProfileSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
-        <div className="h-4 w-64 animate-pulse rounded bg-gray-200" />
-      </div>
-      <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-        <SkeletonLoader variant="text" lines={2} />
-        <SkeletonLoader variant="text" lines={2} />
-      </div>
-    </div>
-  );
-}
-
-async function ProfileContent() {
+export default async function AccountProfilePage() {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -36,65 +22,53 @@ async function ProfileContent() {
   const email = user.email || '-';
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-lelampahan-earth">Profil</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Informasi akun Anda di Lelampahan.
-        </p>
+    <div className="space-y-8">
+      <PageHeader
+        title="Dashboard Akun"
+        description="Pantau pesanan, tiket, dan informasi akun Anda di Lelampahan."
+      >
+        <p className="mt-3 text-lg font-semibold text-lelampahan-earth">Halo, {displayName}</p>
+      </PageHeader>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Total Pesanan" value="0" helper="Riwayat booking Anda" />
+        <StatCard label="Tiket Aktif" value="0" helper="Siap digunakan saat check-in" />
+        <StatCard label="Menunggu Pembayaran" value="0" helper="Selesaikan sebelum kedaluwarsa" />
       </div>
 
-      {/* Profile Card */}
+      <div>
+        <h2 className="text-lg font-semibold text-lelampahan-earth">Aksi Cepat</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <QuickActionCard title="Jelajahi Pengalaman" description="Temukan tur, event, dan aktivitas budaya di Yogyakarta." href="/" />
+          <QuickActionCard title="Tiket Saya" description="Lihat tiket QR untuk pesanan yang sudah dibayar." href="/account/tickets" />
+          <QuickActionCard title="Riwayat Pesanan" description="Cek status booking dan pembayaran Anda." href="/account/orders" />
+        </div>
+      </div>
+
       <Card variant="elevated" padding="lg">
         <div className="space-y-6">
-          {/* Avatar Section */}
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lelampahan-gold text-white text-xl font-semibold">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lelampahan-gold text-xl font-semibold text-white">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-lg font-semibold text-lelampahan-earth">
-                {displayName}
-              </p>
+              <h2 className="text-lg font-semibold text-lelampahan-earth">Profil Akun</h2>
               <p className="text-sm text-gray-500">{email}</p>
             </div>
           </div>
 
-          {/* Divider */}
           <hr className="border-gray-200" />
 
-          {/* Profile Fields */}
           <div className="grid gap-5 sm:grid-cols-2">
-            <Input
-              label="Nama"
-              value={displayName}
-              readOnly
-              className="bg-gray-50 cursor-default"
-            />
-            <Input
-              label="Email"
-              value={email}
-              readOnly
-              className="bg-gray-50 cursor-default"
-            />
+            <Input label="Nama" value={displayName} readOnly className="bg-gray-50 cursor-default" />
+            <Input label="Email" value={email} readOnly className="bg-gray-50 cursor-default" />
           </div>
 
-          {/* Info Note */}
           <p className="text-xs text-gray-400">
-            Informasi profil dikelola melalui akun autentikasi Anda. Hubungi
-            admin jika perlu mengubah data.
+            Informasi profil dikelola melalui akun autentikasi Anda. Hubungi admin jika perlu mengubah data.
           </p>
         </div>
       </Card>
     </div>
-  );
-}
-
-export default function AccountProfilePage() {
-  return (
-    <Suspense fallback={<ProfileSkeleton />}>
-      <ProfileContent />
-    </Suspense>
   );
 }
