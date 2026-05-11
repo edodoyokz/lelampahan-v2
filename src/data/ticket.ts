@@ -42,7 +42,11 @@ export async function findTicketByCode(code: string) {
       checkIns: true,
       order: {
         include: {
-          session: { include: { listing: true } },
+          session: {
+            include: {
+              listing: true,
+            },
+          },
         },
       },
     },
@@ -52,15 +56,6 @@ export async function findTicketByCode(code: string) {
 export async function findTicketsByOrder(orderId: string) {
   return prisma.ticket.findMany({
     where: { orderId },
-  });
-}
-
-export async function findActiveTicketCountByUser(userId: string) {
-  return prisma.ticket.count({
-    where: {
-      order: { userId },
-      status: 'ISSUED',
-    },
   });
 }
 
@@ -78,15 +73,9 @@ export async function recordCheckIn(data: {
   });
 }
 
-export async function markTicketCheckedInIfIssued(ticketId: string, checkedInAt = new Date()) {
-  const result = await prisma.ticket.updateMany({
-    where: { id: ticketId, status: 'ISSUED' },
-    data: { status: 'CHECKED_IN', checkedInAt },
-  });
-  return result.count === 1;
-}
-
 export async function markTicketCheckedInDb(ticketId: string) {
-  await markTicketCheckedInIfIssued(ticketId);
-  return prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: { status: 'CHECKED_IN', checkedInAt: new Date() },
+  });
 }

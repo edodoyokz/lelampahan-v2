@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { formatTicketStatusLabel } from '@/lib/status-labels';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { findTicketsByUser } from '@/data/ticket';
+import { ensureUserProfileForAuthUser } from '@/data/user';
 import { redirect } from 'next/navigation';
 import { Ticket } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -13,7 +14,18 @@ export default async function TicketWalletPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/auth/login');
 
-  const tickets = await findTicketsByUser(user.id);
+  const profile = await ensureUserProfileForAuthUser({
+    authUserId: user.id,
+    email: user.email,
+    name:
+      typeof user.user_metadata?.full_name === 'string'
+        ? user.user_metadata.full_name
+        : typeof user.user_metadata?.name === 'string'
+          ? user.user_metadata.name
+          : null,
+  });
+
+  const tickets = await findTicketsByUser(profile.id);
 
   return (
     <div>

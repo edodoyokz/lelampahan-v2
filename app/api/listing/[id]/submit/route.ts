@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateListingStatus } from '@/data/listing';
 import { recordAuditLog } from '@/data/audit';
-import { requireApiUser } from '@/lib/auth/api';
+import { requireListingOwnership } from '@/lib/auth/api';
 import { handleApiError } from '@/lib/errors';
 
 interface Props {
@@ -10,10 +10,10 @@ interface Props {
 
 export async function POST(request: Request, { params }: Props) {
   try {
-    const auth = await requireApiUser(request);
+    const { id } = await params;
+    const auth = await requireListingOwnership(request, id);
     if (auth.response) return auth.response;
 
-    const { id } = await params;
     const listing = await updateListingStatus(id, 'PENDING_REVIEW');
 
     await recordAuditLog({

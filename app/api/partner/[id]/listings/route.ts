@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { listListingsForPartner } from '@/data/listing';
-import { requireApiUser } from '@/lib/auth/api';
+import { requirePartnerOwnership } from '@/lib/auth/api';
 import { handleApiError } from '@/lib/errors';
 
 interface Props {
@@ -9,10 +9,10 @@ interface Props {
 
 export async function GET(request: Request, { params }: Props) {
   try {
-    const auth = await requireApiUser(request);
+    const { id } = await params;
+    const auth = await requirePartnerOwnership(request, id);
     if (auth.response) return auth.response;
 
-    const { id } = await params;
     const url = new URL(request.url);
     const status = url.searchParams.get('status') ?? undefined;
     const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
