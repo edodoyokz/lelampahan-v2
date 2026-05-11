@@ -4,6 +4,7 @@ import { canAccessAdminRoute, canAccessPartnerRoute, getUserRole } from '@/lib/a
 
 const partnerRoutes = ['/partner'];
 const adminRoutes = ['/admin'];
+const superAdminRoutes = ['/admin/users', '/admin/audit', '/admin/settings'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -50,8 +51,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
 
-    if (!canAccessAdminRoute(getUserRole(user))) {
+    const role = getUserRole(user);
+
+    if (!canAccessAdminRoute(role)) {
       return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    if (superAdminRoutes.some((route) => pathname.startsWith(route)) && role !== 'SUPER_ADMIN') {
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
   }
 
