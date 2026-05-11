@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { DataTable, type Column } from '@/components/ui/data-table';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
+import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
+import { PageHeader } from '@/components/ui/page-header';
 
 interface PartnerListing {
   id: string;
@@ -25,6 +27,7 @@ export default function ListingManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const loadPengalaman = async () => {
     setLoading(true);
@@ -180,28 +183,30 @@ export default function ListingManagement() {
     );
   }
 
+  const filteredListings = statusFilter === 'ALL' ? listings : listings.filter((listing) => listing.status === statusFilter);
+
   return (
     <div>
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-lelampahan-earth">Pengalaman</h1>
-          {context && (
-            <p className="mt-1 text-sm text-gray-500">
-              {context.partner.name} · {context.role} · {context.partner.status}
-            </p>
-          )}
-        </div>
-        <Link href="/partner/listings/new">
-          <Button variant="primary" size="md">
-            + Listing Baru
-          </Button>
-        </Link>
+      <PageHeader title="Pengalaman" description={context ? `${context.partner.name} · ${context.role} · ${context.partner.status}` : 'Kelola pengalaman yang Anda tawarkan.'} action={{ label: '+ Listing Baru', href: '/partner/listings/new' }} />
+
+      <div className="mt-6">
+        <StatusFilterTabs
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { label: 'Semua', value: 'ALL' },
+            { label: 'Draft', value: 'DRAFT' },
+            { label: 'Review', value: 'PENDING_REVIEW' },
+            { label: 'Terbit', value: 'PUBLISHED' },
+            { label: 'Ditolak', value: 'REJECTED' },
+          ]}
+        />
       </div>
 
       <div className="mt-6">
         <DataTable<PartnerListing>
           columns={columns}
-          data={listings}
+          data={filteredListings}
           loading={loading}
           mobileCardRender={mobileCardRender}
           emptyState={{
