@@ -38,7 +38,18 @@ export async function createTicket(data: {
 export async function findTicketByCode(code: string) {
   return prisma.ticket.findUnique({
     where: { code },
-    include: { checkIns: true },
+    include: {
+      checkIns: true,
+      order: {
+        include: {
+          session: {
+            include: {
+              listing: true,
+            },
+          },
+        },
+      },
+    },
   });
 }
 
