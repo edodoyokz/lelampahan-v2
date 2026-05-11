@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
@@ -8,6 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { formatIDR } from '@/lib/format-currency';
+import { formatOrderStatusLabel } from '@/lib/status-labels';
 
 interface OrderData {
   id: string;
@@ -22,20 +24,6 @@ interface OrderData {
     };
   };
 }
-
-const statusLabels: Record<string, string> = {
-  DRAFT: 'Draft',
-  PENDING_PAYMENT: 'Menunggu Pembayaran',
-  PAID: 'Dibayar',
-  COMPLETED: 'Selesai',
-  EXPIRED: 'Kedaluwarsa',
-  CANCELLED: 'Dibatalkan',
-  REFUND_REQUESTED: 'Pengembalian Dana Diajukan',
-  REFUND_REJECTED: 'Pengembalian Dana Ditolak',
-  PARTIALLY_REFUNDED: 'Sebagian Dana Dikembalikan',
-  REFUNDED: 'Dana Dikembalikan',
-  NEEDS_ADMIN_REVIEW: 'Ditinjau Admin',
-};
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -56,20 +44,45 @@ function OrderCardSkeleton() {
   );
 }
 
+function getActionButton(order: OrderData) {
+  if (order.status === 'PENDING_PAYMENT') {
+    return (
+      <Link href="/checkout/pending">
+        <Button variant="primary" size="sm">Lanjutkan Pembayaran</Button>
+      </Link>
+    );
+  }
+  if (['PAID', 'COMPLETED'].includes(order.status)) {
+    return (
+      <Link href="/account/tickets">
+        <Button variant="ghost" size="sm">Lihat Tiket</Button>
+      </Link>
+    );
+  }
+  return (
+    <Link href={`/l/${order.session.listing.slug}`}>
+      <Button variant="ghost" size="sm">Lihat Pengalaman</Button>
+    </Link>
+  );
+}
+
 export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchOrders() {
       try {
         const res = await fetch('/api/account/orders');
-        if (res.ok) {
-          const data = await res.json();
-          setOrders(data.orders ?? []);
+        if (!res.ok) {
+          setError('Gagal memuat pesanan. Coba lagi beberapa saat lagi.');
+          return;
         }
+        const data = await res.json();
+        setOrders(data.orders ?? []);
       } catch {
-        // silently handle fetch errors
+        setError('Gagal memuat pesanan. Coba lagi beberapa saat lagi.');
       } finally {
         setLoading(false);
       }
@@ -82,7 +95,9 @@ export default function OrderHistoryPage() {
       <PageHeader title="Pesanan Saya" description="Pantau status booking dan pembayaran Anda." />
 
       <div className="mt-6 space-y-4">
-        {loading ? (
+        {error ? (
+          <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
+        ) : loading ? (
           <>
             <OrderCardSkeleton />
             <OrderCardSkeleton />
@@ -125,14 +140,12 @@ export default function OrderHistoryPage() {
                 <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2">
                   <StatusBadge
                     status={getStatusVariant(order.status)}
-                    label={statusLabels[order.status] ?? order.status}
+                    label={formatOrderStatusLabel(order.status)}
                   />
                   <span className="text-sm font-semibold text-lelampahan-earth">
                     {formatIDR(order.totalAmount)}
                   </span>
-                  <Button variant="ghost" size="sm" disabled>
-                    Lihat Detail
-                  </Button>
+                  {getActionButton(order)}
                 </div>
               </div>
             </Card>

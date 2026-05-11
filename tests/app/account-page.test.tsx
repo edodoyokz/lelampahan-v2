@@ -31,6 +31,6 @@ describe('Account page', () => {
     expect(screen.getByText('Jelajahi Pengalaman')).toBeInTheDocument();
     expect(screen.getByText('Tiket Saya')).toBeInTheDocument();
     expect(screen.getByText('Riwayat Pesanan')).toBeInTheDocument();
-    expect(screen.getByText('Profil Akun')).toBeInTheDocument();
+    expect(await screen.findByText('Lanjutkan Pembayaran')).toBeInTheDocument();
   });
 });

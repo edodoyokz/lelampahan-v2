@@ -25,14 +25,14 @@ describe('AccountShell', () => {
     expect(screen.getByTestId('page-content')).toBeInTheDocument();
   });
 
-  it('renders Profil navigation item', () => {
+  it('renders Dashboard navigation item', () => {
     render(
       <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
-    const profilLinks = screen.getAllByText('Profil');
-    expect(profilLinks.length).toBeGreaterThanOrEqual(1);
+    const dashboardLinks = screen.getAllByText('Dashboard');
+    expect(dashboardLinks.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders Pesanan navigation item', () => {
@@ -45,14 +45,24 @@ describe('AccountShell', () => {
     expect(pesananLinks.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders Tiket Saya navigation item', () => {
+  it('renders Tiket navigation item', () => {
     render(
       <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
-    const walletLinks = screen.getAllByText('Tiket Saya');
-    expect(walletLinks.length).toBeGreaterThanOrEqual(1);
+    const tiketLinks = screen.getAllByText('Tiket');
+    expect(tiketLinks.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders Profil navigation item', () => {
+    render(
+      <AccountShell userLabel="Test User">
+        <div>Content</div>
+      </AccountShell>
+    );
+    const profilLinks = screen.getAllByText('Profil');
+    expect(profilLinks.length).toBeGreaterThanOrEqual(1);
   });
 
   it('links to correct hrefs', () => {
@@ -66,6 +76,7 @@ describe('AccountShell', () => {
     expect(hrefs).toContain('/account');
     expect(hrefs).toContain('/account/orders');
     expect(hrefs).toContain('/account/tickets');
+    expect(hrefs).toContain('/account/profile');
   });
 
   it('marks active item with aria-current="page"', async () => {
