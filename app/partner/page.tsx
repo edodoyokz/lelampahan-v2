@@ -12,7 +12,14 @@ interface PartnerContext {
   partner: { id: string; name: string; status: string };
 }
 
-interface ListingSummary { status: string }
+interface PartnerSummary {
+  activeListings: number;
+  draftReviewListings: number;
+  requestedBookings: number;
+  pendingPaymentBookings: number;
+  monthlyPaidOrders: number;
+  estimatedMonthlyRevenue: number;
+}
 
 function DashboardSkeleton() {
   return (
@@ -30,10 +37,7 @@ function DashboardSkeleton() {
 
 export default function PartnerDashboard() {
   const [context, setContext] = useState<PartnerContext | null>(null);
-  const [activeListings, setActiveListings] = useState(0);
-  const [draftReviewListings, setDraftReviewListings] = useState(0);
-  const [monthlyOrders, setMonthlyOrders] = useState(0);
-  const [estimatedRevenue, setEstimatedRevenue] = useState(0);
+  const [summary, setSummary] = useState<PartnerSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,16 +54,15 @@ export default function PartnerDashboard() {
         const partnerContext = await contextResponse.json();
         setContext(partnerContext);
 
-        const listingsResponse = await fetch(`/api/partner/${partnerContext.partner.id}/listings`, { cache: 'no-store' });
-        if (listingsResponse.ok) {
-          const listingsData = await listingsResponse.json();
-          const listings: ListingSummary[] = listingsData.listings ?? [];
-          setActiveListings(listings.filter((listing) => listing.status === 'PUBLISHED').length);
-          setDraftReviewListings(listings.filter((listing) => ['DRAFT', 'PENDING_REVIEW'].includes(listing.status)).length);
+        const summaryResponse = await fetch('/api/partner/dashboard-summary', { cache: 'no-store' });
+        if (!summaryResponse.ok) {
+          setError('Gagal memuat ringkasan dashboard.');
+          setLoading(false);
+          return;
         }
 
-        setMonthlyOrders(0);
-        setEstimatedRevenue(0);
+        const dashboardSummary = await summaryResponse.json();
+        setSummary(dashboardSummary);
       } catch {
         setError('Gagal memuat data dashboard.');
       } finally {
@@ -92,10 +95,10 @@ export default function PartnerDashboard() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Pengalaman Aktif" value={activeListings} />
-        <StatCard label="Draft/Review" value={draftReviewListings} helper="Butuh dilengkapi atau menunggu admin" />
-        <StatCard label="Pesanan Bulan Ini" value={monthlyOrders} helper="Endpoint laporan belum aktif" />
-        <StatCard label="Pendapatan Estimasi" value={formatIDR(estimatedRevenue)} helper="Placeholder sampai laporan aktif" />
+        <StatCard label="Pengalaman Aktif" value={summary?.activeListings ?? 0} />
+        <StatCard label="Draft/Review" value={summary?.draftReviewListings ?? 0} helper="Butuh dilengkapi atau menunggu admin" />
+        <StatCard label="Pesanan Bulan Ini" value={summary?.monthlyPaidOrders ?? 0} helper={`${summary?.requestedBookings ?? 0} permintaan · ${summary?.pendingPaymentBookings ?? 0} menunggu pembayaran`} />
+        <StatCard label="Pendapatan Estimasi" value={formatIDR(summary?.estimatedMonthlyRevenue ?? 0)} helper="Order paid/completed bulan ini" />
       </div>
 
       <div>

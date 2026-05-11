@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import { getCustomerDashboardSummary } from '@/data/dashboard-summary';
+import { ensureUserProfileForAuthUser } from '@/data/user';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +22,12 @@ export default async function AccountProfilePage() {
     'Pengguna';
 
   const email = user.email || '-';
+  const profile = await ensureUserProfileForAuthUser({
+    authUserId: user.id,
+    email: user.email,
+    name: typeof displayName === 'string' ? displayName : null,
+  });
+  const summary = await getCustomerDashboardSummary(profile.id);
 
   return (
     <div className="space-y-8">
@@ -31,9 +39,9 @@ export default async function AccountProfilePage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Pesanan" value="0" helper="Riwayat booking Anda" />
-        <StatCard label="Tiket Aktif" value="0" helper="Siap digunakan saat check-in" />
-        <StatCard label="Menunggu Pembayaran" value="0" helper="Selesaikan sebelum kedaluwarsa" />
+        <StatCard label="Total Pesanan" value={summary.totalOrders} helper="Riwayat booking Anda" />
+        <StatCard label="Tiket Aktif" value={summary.activeTickets} helper="Siap digunakan saat check-in" />
+        <StatCard label="Menunggu Pembayaran" value={summary.pendingPaymentOrders} helper="Selesaikan sebelum kedaluwarsa" />
       </div>
 
       <div>

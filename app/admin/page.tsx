@@ -10,8 +10,9 @@ import { QuickActionCard } from '@/components/ui/quick-action-card';
 interface DashboardStats {
   totalPartners: number;
   totalListings: number;
-  pendingReview: number;
-  revenue: number;
+  pendingPartnerReviews: number;
+  pendingListingReviews: number;
+  grossRevenue: number;
 }
 
 function StatCardSkeleton() {
@@ -79,8 +80,8 @@ const statCards = [
     format: (v: number) => v.toString(),
   },
   {
-    key: 'pendingReview',
-    label: 'Menunggu Review',
+    key: 'pendingPartnerReviews',
+    label: 'Partner Menunggu Review',
     icon: ClockIcon,
     iconBg: 'bg-yellow-100',
     iconColor: 'text-yellow-600',
@@ -88,8 +89,17 @@ const statCards = [
     format: (v: number) => v.toString(),
   },
   {
-    key: 'revenue',
-    label: 'Pendapatan',
+    key: 'pendingListingReviews',
+    label: 'Pengalaman Menunggu Review',
+    icon: CurrencyIcon,
+    iconBg: 'bg-lelampahan-cream',
+    iconColor: 'text-lelampahan-gold',
+    valueColor: 'text-lelampahan-earth',
+    format: (v: number) => v.toString(),
+  },
+  {
+    key: 'grossRevenue',
+    label: 'Pendapatan Kotor',
     icon: CurrencyIcon,
     iconBg: 'bg-lelampahan-cream',
     iconColor: 'text-lelampahan-gold',
@@ -106,34 +116,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const [partnersRes, listingsRes] = await Promise.all([
-          fetch('/api/admin/partners'),
-          fetch('/api/admin/listings'),
-        ]);
-
-        let totalPartners = 0;
-        let totalListings = 0;
-        let pendingReview = 0;
-
-        if (partnersRes.ok) {
-          const data = await partnersRes.json();
-          totalPartners = data.total ?? 0;
+        const response = await fetch('/api/admin/dashboard-summary', { cache: 'no-store' });
+        if (!response.ok) {
+          setError('Gagal memuat data dashboard.');
+          return;
         }
 
-        if (listingsRes.ok) {
-          const data = await listingsRes.json();
-          totalListings = data.total ?? 0;
-          pendingReview = (data.listings ?? []).filter(
-            (l: { status: string }) => l.status === 'PENDING_REVIEW'
-          ).length;
-        }
-
-        setStats({
-          totalPartners,
-          totalListings,
-          pendingReview,
-          revenue: 0, // Pendapatan placeholder — no endpoint available yet
-        });
+        const data = await response.json();
+        setStats(data);
       } catch {
         setError('Gagal memuat data dashboard.');
       } finally {
@@ -152,9 +142,9 @@ export default function AdminDashboard() {
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {loading
-          ? Array.from({ length: 4 }, (_, i) => <StatCardSkeleton key={i} />)
+          ? Array.from({ length: 5 }, (_, i) => <StatCardSkeleton key={i} />)
           : statCards.map((card) => {
               const Icon = card.icon;
               const value = stats?.[card.key as keyof DashboardStats] ?? 0;
