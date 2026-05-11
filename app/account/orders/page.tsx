@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { formatIDR } from '@/lib/format-currency';
 
 interface OrderData {
@@ -77,7 +79,7 @@ export default function OrderHistoryPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Pesanan Saya</h1>
+      <PageHeader title="Pesanan Saya" description="Pantau status booking dan pembayaran Anda." />
 
       <div className="mt-6 space-y-4">
         {loading ? (
@@ -128,6 +130,9 @@ export default function OrderHistoryPage() {
                   <span className="text-sm font-semibold text-lelampahan-earth">
                     {formatIDR(order.totalAmount)}
                   </span>
+                  <Button variant="ghost" size="sm" disabled>
+                    Lihat Detail
+                  </Button>
                 </div>
               </div>
             </Card>
