@@ -10,12 +10,15 @@ vi.mock('next/link', () => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/account'),
+  useRouter: vi.fn(() => ({ push: vi.fn(), refresh: vi.fn() })),
 }));
+
+global.fetch = vi.fn();
 
 describe('AccountShell', () => {
   it('renders children content', () => {
     render(
-      <AccountShell>
+      <AccountShell userLabel="Test User">
         <div data-testid="page-content">Page content</div>
       </AccountShell>
     );
@@ -24,7 +27,7 @@ describe('AccountShell', () => {
 
   it('renders Profil navigation item', () => {
     render(
-      <AccountShell>
+      <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
@@ -34,7 +37,7 @@ describe('AccountShell', () => {
 
   it('renders Pesanan navigation item', () => {
     render(
-      <AccountShell>
+      <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
@@ -44,7 +47,7 @@ describe('AccountShell', () => {
 
   it('renders Tiket Saya navigation item', () => {
     render(
-      <AccountShell>
+      <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
@@ -54,7 +57,7 @@ describe('AccountShell', () => {
 
   it('links to correct hrefs', () => {
     render(
-      <AccountShell>
+      <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
@@ -70,7 +73,7 @@ describe('AccountShell', () => {
     vi.mocked(usePathname).mockReturnValue('/account/orders');
 
     render(
-      <AccountShell>
+      <AccountShell userLabel="Test User">
         <div>Content</div>
       </AccountShell>
     );
@@ -78,5 +81,15 @@ describe('AccountShell', () => {
     const activeLinks = screen.getAllByRole('link', { current: 'page' });
     expect(activeLinks.length).toBeGreaterThanOrEqual(1);
     expect(activeLinks[0]).toHaveAttribute('href', '/account/orders');
+  });
+
+  it('renders logout button and marketplace link', () => {
+    render(
+      <AccountShell userLabel="Test User">
+        <div>Content</div>
+      </AccountShell>
+    );
+    expect(screen.getByText('Keluar')).toBeInTheDocument();
+    expect(screen.getByText('← Marketplace')).toBeInTheDocument();
   });
 });

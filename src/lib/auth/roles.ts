@@ -28,3 +28,7 @@ export function canAccessAdminRoute(role: AppRole | undefined): boolean {
 export function canAccessPartnerRoute(isAuthenticated: boolean): boolean {
   return isAuthenticated;
 }
+
+export function canAccessSuperAdminRoute(role: AppRole | undefined): boolean {
+  return role === 'SUPER_ADMIN';
+}

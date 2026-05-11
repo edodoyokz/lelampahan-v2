@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { DashboardTopbar } from '@/components/layout/dashboard-topbar';
 
 interface AccountNavItem {
   label: string;
@@ -54,9 +55,10 @@ const accountNavItems: AccountNavItem[] = [
 
 export interface AccountShellProps {
   children: React.ReactNode;
+  userLabel: string;
 }
 
-export function AccountShell({ children }: AccountShellProps) {
+export function AccountShell({ children, userLabel }: AccountShellProps) {
   const pathname = usePathname();
 
   function isActive(href: string): boolean {
@@ -68,6 +70,7 @@ export function AccountShell({ children }: AccountShellProps) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <DashboardTopbar title="Dashboard Akun" userLabel={userLabel} role="CUSTOMER" />
       {/* Mobile: Horizontal tab navigation above content */}
       <nav
         className="mb-6 flex gap-1 overflow-x-auto border-b border-gray-200 md:hidden"

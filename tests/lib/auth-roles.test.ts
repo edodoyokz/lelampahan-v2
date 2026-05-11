@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { canAccessAdminRoute, canAccessPartnerRoute, getUserRole } from '@/lib/auth/roles';
+import { canAccessAdminRoute, canAccessPartnerRoute, canAccessSuperAdminRoute, getUserRole } from '@/lib/auth/roles';
 
 describe('auth role helpers', () => {
+  it('allows only super admin to access super admin routes', () => {
+    expect(canAccessSuperAdminRoute('SUPER_ADMIN')).toBe(true);
+    expect(canAccessSuperAdminRoute('ADMIN')).toBe(false);
+    expect(canAccessSuperAdminRoute('CUSTOMER')).toBe(false);
+    expect(canAccessSuperAdminRoute(undefined)).toBe(false);
+  });
+
   it('allows only admin and super admin to access admin routes', () => {
     expect(canAccessAdminRoute('ADMIN')).toBe(true);
     expect(canAccessAdminRoute('SUPER_ADMIN')).toBe(true);

@@ -10,12 +10,15 @@ vi.mock('next/link', () => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/partner'),
+  useRouter: vi.fn(() => ({ push: vi.fn(), refresh: vi.fn() })),
 }));
+
+global.fetch = vi.fn();
 
 describe('PartnerShell', () => {
   it('renders children content', () => {
     render(
-      <PartnerShell>
+      <PartnerShell userLabel="Partner User">
         <div data-testid="page-content">Partner page</div>
       </PartnerShell>
     );
@@ -24,7 +27,7 @@ describe('PartnerShell', () => {
 
   it('renders all partner nav items', () => {
     render(
-      <PartnerShell>
+      <PartnerShell userLabel="Partner User">
         <div>Content</div>
       </PartnerShell>
     );
@@ -36,7 +39,7 @@ describe('PartnerShell', () => {
 
   it('links to correct partner hrefs', () => {
     render(
-      <PartnerShell>
+      <PartnerShell userLabel="Partner User">
         <div>Content</div>
       </PartnerShell>
     );
@@ -50,11 +53,21 @@ describe('PartnerShell', () => {
 
   it('marks active item with aria-current="page"', () => {
     render(
-      <PartnerShell>
+      <PartnerShell userLabel="Partner User">
         <div>Content</div>
       </PartnerShell>
     );
     const activeLinks = screen.getAllByRole('link', { current: 'page' });
     expect(activeLinks.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders logout button and marketplace link', () => {
+    render(
+      <PartnerShell userLabel="Partner User">
+        <div>Content</div>
+      </PartnerShell>
+    );
+    expect(screen.getByText('Keluar')).toBeInTheDocument();
+    expect(screen.getByText('← Marketplace')).toBeInTheDocument();
   });
 });
