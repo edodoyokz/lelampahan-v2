@@ -21,6 +21,8 @@ interface PartnerContext {
   partner: { id: string; name: string; status: string };
 }
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export default function ListingManagement() {
   const [listings, setPengalaman] = useState<PartnerListing[]>([]);
   const [context, setContext] = useState<PartnerContext | null>(null);
@@ -28,6 +30,8 @@ export default function ListingManagement() {
   const [error, setError] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadPengalaman = async () => {
     setLoading(true);
@@ -47,8 +51,11 @@ export default function ListingManagement() {
     const partnerContext = await contextResponse.json();
     setContext(partnerContext);
 
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('pageSize', String(DEFAULT_PAGE_SIZE));
     const response = await fetch(
-      `/api/partner/${partnerContext.partner.id}/listings`,
+      `/api/partner/${partnerContext.partner.id}/listings?${params.toString()}`,
       { cache: 'no-store' }
     );
     if (!response.ok) {
@@ -59,6 +66,7 @@ export default function ListingManagement() {
 
     const data = await response.json();
     setPengalaman(data.listings ?? []);
+    setTotalItems(data.total ?? 0);
     setLoading(false);
   };
 
@@ -79,7 +87,7 @@ export default function ListingManagement() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadPengalaman();
-  }, []);
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: Column<PartnerListing>[] = [
     {
@@ -192,7 +200,10 @@ export default function ListingManagement() {
       <div className="mt-6">
         <StatusFilterTabs
           value={statusFilter}
-          onChange={setStatusFilter}
+          onChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
           options={[
             { label: 'Semua', value: 'ALL' },
             { label: 'Draft', value: 'DRAFT' },
@@ -218,6 +229,10 @@ export default function ListingManagement() {
               href: '/partner/listings/new',
             },
           }}
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          totalItems={totalItems}
+          onPageChange={setPage}
         />
       </div>
     </div>

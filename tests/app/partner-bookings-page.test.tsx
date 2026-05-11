@@ -9,7 +9,7 @@ describe('Partner bookings page', () => {
   it('renders summary labels', async () => {
     render(<BookingsPage />);
     expect(await screen.findByText('Pesanan & Permintaan Booking')).toBeInTheDocument();
-    expect(screen.getByText('Permintaan')).toBeInTheDocument();
+    expect(screen.getAllByText('Permintaan').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Menunggu Pembayaran')).toBeInTheDocument();
     expect(screen.getByText('Disetujui/Selesai')).toBeInTheDocument();
   });

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { findListingBySlug } from '@/data/listing';
 import { computeSessionRemainingCapacity } from '@/data/session';
 import { Card } from '@/components/ui/card';
@@ -154,9 +155,9 @@ export default async function ListingDetailPage({ params }: Props) {
 
         {/* Image Gallery Section */}
         <section aria-label="Galeri gambar pengalaman">
-          <div className="aspect-video w-full rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+          <div className="relative aspect-video w-full rounded-xl bg-gray-100 border border-gray-200 overflow-hidden">
             {imageUrl ? (
-              <img src={imageUrl} alt={coverImage?.alt ?? listing.title} className="h-full w-full object-cover" />
+              <Image src={imageUrl} alt={coverImage?.alt ?? listing.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 1024px" />
             ) : (
               <div className="text-center text-gray-400">
                 <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">

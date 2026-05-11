@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
+import { SearchInput } from '@/components/ui/search-input';
 
 interface PartnerCapability {
   type: string;
@@ -27,6 +28,8 @@ type ModalAction = {
   name: string;
 } | null;
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export default function AdminPartnerPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,11 +37,19 @@ export default function AdminPartnerPage() {
   const [modalAction, setModalAction] = useState<ModalAction>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadPartners = useCallback(async () => {
     setLoading(true);
     setError('');
-    const response = await fetch('/api/admin/partners', { cache: 'no-store' });
+    const params = new URLSearchParams();
+    if (statusFilter !== 'ALL') params.set('status', statusFilter);
+    if (searchQuery.trim()) params.set('q', searchQuery.trim());
+    params.set('page', String(page));
+    params.set('pageSize', String(DEFAULT_PAGE_SIZE));
+    const response = await fetch(`/api/admin/partners?${params.toString()}`, { cache: 'no-store' });
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         setError('Akses admin diperlukan.');
@@ -51,8 +62,9 @@ export default function AdminPartnerPage() {
 
     const data = await response.json();
     setPartners(data.partners ?? []);
+    setTotalItems(data.total ?? 0);
     setLoading(false);
-  }, []);
+  }, [page, statusFilter, searchQuery]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -195,16 +207,17 @@ export default function AdminPartnerPage() {
     </div>
   );
 
-  const filteredPartners = statusFilter === 'ALL' ? partners : partners.filter((partner) => partner.status === statusFilter);
-
   return (
     <div>
       <PageHeader title="Persetujuan Partner" description="Tinjau dan setujui pendaftaran partner baru." />
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <StatusFilterTabs
           value={statusFilter}
-          onChange={setStatusFilter}
+          onChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
           options={[
             { label: 'Semua', value: 'ALL' },
             { label: 'Review', value: 'PENDING_REVIEW' },
@@ -212,6 +225,16 @@ export default function AdminPartnerPage() {
             { label: 'Ditolak', value: 'REJECTED' },
           ]}
         />
+        <div className="w-full sm:w-64">
+          <SearchInput
+            value={searchQuery}
+            onChange={(value) => {
+              setSearchQuery(value);
+              setPage(1);
+            }}
+            placeholder="Cari nama partner..."
+          />
+        </div>
       </div>
 
       {error && (
@@ -221,13 +244,17 @@ export default function AdminPartnerPage() {
       <div className="mt-6">
         <DataTable
           columns={columns}
-          data={filteredPartners}
+          data={partners}
           loading={loading}
           emptyState={{
             title: 'Tidak ada item yang menunggu review',
             description: 'Semua partner sudah direview.',
           }}
           mobileCardRender={mobileCardRender}
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          totalItems={totalItems}
+          onPageChange={setPage}
         />
       </div>
 

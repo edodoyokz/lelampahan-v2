@@ -16,9 +16,11 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const status = url.searchParams.get('status') ?? undefined;
-    const orders = await findOrdersByPartnerId(context.partner.id, status);
+    const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
+    const pageSize = url.searchParams.get('pageSize') ? Number(url.searchParams.get('pageSize')) : undefined;
+    const { orders, total } = await findOrdersByPartnerId(context.partner.id, status, page, pageSize);
 
-    return NextResponse.json({ orders, total: orders.length });
+    return NextResponse.json({ orders, total });
   } catch (error) {
     return handleApiError(error);
   }

@@ -18,6 +18,14 @@ export const eventDetailSchema = z.object({
   gateNotes: z.string().optional(),
 });
 
+export const listingSessionSchema = z.object({
+  startsAt: z.string().min(1),
+  endsAt: z.string().min(1),
+  capacity: z.number().int().positive(),
+  ticketTypeName: z.string().min(1).max(100),
+  price: z.number().int().nonnegative(),
+});
+
 export const listingCoverImageSchema = z.object({
   key: z.string().min(1).max(1024),
   url: z.string().url().max(2048),
@@ -38,6 +46,7 @@ export const listingSchema = z.object({
   tourDetails: tourDetailSchema.optional(),
   eventDetails: eventDetailSchema.optional(),
   coverImage: listingCoverImageSchema.optional(),
+  sessions: z.array(listingSessionSchema).optional(),
 });
 
 export type TourListingInput = z.infer<typeof listingSchema>;

@@ -13,9 +13,17 @@ export async function createSupabaseServerClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // The `setAll` method is called from the Supabase client when
+            // tokens are refreshed. In Server Components we cannot write
+            // cookies (only Server Actions and Route Handlers can). The
+            // middleware already handles token refresh and cookie updates,
+            // so silently ignoring this is safe.
+          }
         },
       },
     },

@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { QuickActionCard } from '@/components/ui/quick-action-card';
+import { findOrderCountByUser, findPendingPaymentOrderCountByUser } from '@/data/order';
+import { findActiveTicketCountByUser } from '@/data/ticket';
 
 export default async function AccountProfilePage() {
   const user = await getCurrentUser();
@@ -21,6 +23,12 @@ export default async function AccountProfilePage() {
 
   const email = user.email || '-';
 
+  const [totalOrders, activeTickets, pendingPayments] = await Promise.all([
+    findOrderCountByUser(user.id),
+    findActiveTicketCountByUser(user.id),
+    findPendingPaymentOrderCountByUser(user.id),
+  ]);
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -31,9 +39,9 @@ export default async function AccountProfilePage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Pesanan" value="0" helper="Riwayat booking Anda" />
-        <StatCard label="Tiket Aktif" value="0" helper="Siap digunakan saat check-in" />
-        <StatCard label="Menunggu Pembayaran" value="0" helper="Selesaikan sebelum kedaluwarsa" />
+        <StatCard label="Total Pesanan" value={totalOrders} helper="Riwayat booking Anda" />
+        <StatCard label="Tiket Aktif" value={activeTickets} helper="Siap digunakan saat check-in" />
+        <StatCard label="Menunggu Pembayaran" value={pendingPayments} helper="Selesaikan sebelum kedaluwarsa" />
       </div>
 
       <div>

@@ -10,9 +10,12 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const status = url.searchParams.get('status') ?? undefined;
-    const listings = await listListingsForAdmin(status);
+    const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
+    const pageSize = url.searchParams.get('pageSize') ? Number(url.searchParams.get('pageSize')) : undefined;
+    const q = url.searchParams.get('q') ?? undefined;
+    const { listings, total } = await listListingsForAdmin(status, page, pageSize, q);
 
-    return NextResponse.json({ listings, total: listings.length });
+    return NextResponse.json({ listings, total });
   } catch (error) {
     return handleApiError(error);
   }

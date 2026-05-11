@@ -90,12 +90,27 @@ export async function findPartnerContextByAuthUserId(authUserId: string) {
   };
 }
 
-export async function listPartners(status?: string) {
-  return prisma.partner.findMany({
-    where: status ? { status: status as ReviewStatus } : undefined,
-    include: { capabilities: true, bankAccounts: true },
-    orderBy: { createdAt: 'desc' },
-  });
+export async function listPartners(status?: string, page?: number, pageSize?: number, q?: string) {
+  const skip = page && pageSize ? (page - 1) * pageSize : undefined;
+  const query = q?.trim();
+  const where = {
+    ...(status ? { status: status as ReviewStatus } : {}),
+    ...(query ? { name: { contains: query, mode: 'insensitive' as const } } : {}),
+  };
+  const normalizedWhere = Object.keys(where).length > 0 ? where : undefined;
+  const [partners, total] = await Promise.all([
+    prisma.partner.findMany({
+      where: normalizedWhere,
+      include: { capabilities: true, bankAccounts: true },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+    }),
+    prisma.partner.count({
+      where: normalizedWhere,
+    }),
+  ]);
+  return { partners, total };
 }
 
 export async function updatePartnerStatus(id: string, status: string) {

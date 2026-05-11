@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
+import { SearchInput } from '@/components/ui/search-input';
 
 interface AdminListing {
   id: string;
@@ -19,10 +20,14 @@ interface AdminListing {
 
 type ModalAction = 'approve' | 'reject';
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export default function AdminListingPage() {
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -30,12 +35,18 @@ export default function AdminListingPage() {
   const [selectedListing, setSelectedListing] = useState<AdminListing | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadListings = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/admin/listings', { cache: 'no-store' });
+      const params = new URLSearchParams();
+      if (statusFilter !== 'ALL') params.set('status', statusFilter);
+      if (searchQuery.trim()) params.set('q', searchQuery.trim());
+      params.set('page', String(page));
+      params.set('pageSize', String(DEFAULT_PAGE_SIZE));
+      const response = await fetch(`/api/admin/listings?${params.toString()}`, { cache: 'no-store' });
       if (!response.ok) {
         setError(
           response.status === 401 || response.status === 403
@@ -46,6 +57,7 @@ export default function AdminListingPage() {
       }
       const data = await response.json();
       setListings(data.listings ?? []);
+      setTotalItems(data.total ?? 0);
     } catch {
       setError('Gagal memuat listing.');
     } finally {
@@ -56,7 +68,7 @@ export default function AdminListingPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadListings();
-  }, []);
+  }, [page, statusFilter, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openModal = (listing: AdminListing, action: ModalAction) => {
     setSelectedListing(listing);
@@ -194,16 +206,17 @@ export default function AdminListingPage() {
     </div>
   );
 
-  const filteredListings = statusFilter === 'ALL' ? listings : listings.filter((listing) => listing.status === statusFilter);
-
   return (
     <div>
       <PageHeader title="Review Pengalaman" description="Tinjau pengalaman yang menunggu persetujuan." />
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <StatusFilterTabs
           value={statusFilter}
-          onChange={setStatusFilter}
+          onChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
           options={[
             { label: 'Semua', value: 'ALL' },
             { label: 'Review', value: 'PENDING_REVIEW' },
@@ -211,6 +224,16 @@ export default function AdminListingPage() {
             { label: 'Ditolak', value: 'REJECTED' },
           ]}
         />
+        <div className="w-full sm:w-64">
+          <SearchInput
+            value={searchQuery}
+            onChange={(value) => {
+              setSearchQuery(value);
+              setPage(1);
+            }}
+            placeholder="Cari judul pengalaman..."
+          />
+        </div>
       </div>
 
       {error && (
@@ -220,13 +243,17 @@ export default function AdminListingPage() {
       <div className="mt-6">
         <DataTable
           columns={columns}
-          data={filteredListings}
+          data={listings}
           loading={loading}
           emptyState={{
             title: 'Tidak ada item yang menunggu review',
             description: 'Semua listing sudah direview.',
           }}
           mobileCardRender={mobileCardRender}
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          totalItems={totalItems}
+          onPageChange={setPage}
         />
       </div>
 

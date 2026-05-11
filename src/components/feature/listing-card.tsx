@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { formatIDR } from '@/lib/format-currency';
 
 export interface ListingCardProps {
@@ -32,10 +33,12 @@ export function ListingCard({
       {/* Image section with 16:9 aspect ratio */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={title}
-            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-200 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-lelampahan-cream to-gray-100">

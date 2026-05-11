@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { formatIDR } from '@/lib/format-currency';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
+import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 
 interface BookingItem {
   id: string;
@@ -26,17 +27,26 @@ type ModalAction = {
   orderNumber: string;
 } | null;
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalAction, setModalAction] = useState<ModalAction>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
     setError('');
-    const response = await fetch('/api/partner/bookings', { cache: 'no-store' });
+    const params = new URLSearchParams();
+    if (statusFilter !== 'ALL') params.set('status', statusFilter);
+    params.set('page', String(page));
+    params.set('pageSize', String(DEFAULT_PAGE_SIZE));
+    const response = await fetch(`/api/partner/bookings?${params.toString()}`, { cache: 'no-store' });
     if (!response.ok) {
       if (response.status === 404) setError('Akun belum terhubung ke partner.');
       else setError('Gagal memuat pesanan.');
@@ -46,8 +56,9 @@ export default function BookingsPage() {
 
     const data = await response.json();
     setBookings(data.orders ?? []);
+    setTotalItems(data.total ?? 0);
     setLoading(false);
-  }, []);
+  }, [page, statusFilter]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -84,7 +95,7 @@ export default function BookingsPage() {
   const columns: Column<BookingItem>[] = [
     {
       key: 'orderNumber',
-      header: 'Order Number',
+      header: 'Nomor Pesanan',
       render: (item) => (
         <span className="font-mono text-xs">{item.orderNumber}</span>
       ),
@@ -216,6 +227,23 @@ export default function BookingsPage() {
         <StatCard label="Disetujui/Selesai" value={approvedCount} />
       </div>
 
+      <div className="mt-6">
+        <StatusFilterTabs
+          value={statusFilter}
+          onChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
+          options={[
+            { label: 'Semua', value: 'ALL' },
+            { label: 'Permintaan', value: 'REQUESTED' },
+            { label: 'Menunggu Bayar', value: 'PENDING_PAYMENT' },
+            { label: 'Disetujui', value: 'PARTNER_APPROVED' },
+            { label: 'Selesai', value: 'COMPLETED' },
+          ]}
+        />
+      </div>
+
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
       )}
@@ -230,6 +258,10 @@ export default function BookingsPage() {
             description: 'Pesanan dari pelanggan akan muncul di sini.',
           }}
           mobileCardRender={mobileCardRender}
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          totalItems={totalItems}
+          onPageChange={setPage}
         />
       </div>
 

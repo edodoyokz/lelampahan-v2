@@ -31,7 +31,7 @@ describe('PartnerShell', () => {
     expect(screen.getAllByText('Dashboard').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Pengalaman').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Pesanan').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Scanner').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Pemindai').length).toBeGreaterThanOrEqual(1);
   });
 
   it('links to correct partner hrefs', () => {

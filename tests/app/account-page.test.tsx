@@ -6,6 +6,13 @@ const getCurrentUser = vi.fn();
 const redirect = vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`); });
 
 vi.mock('@/lib/supabase/client', () => ({ getCurrentUser: () => getCurrentUser() }));
+vi.mock('@/data/order', () => ({
+  findOrderCountByUser: vi.fn().mockResolvedValue(3),
+  findPendingPaymentOrderCountByUser: vi.fn().mockResolvedValue(1),
+}));
+vi.mock('@/data/ticket', () => ({
+  findActiveTicketCountByUser: vi.fn().mockResolvedValue(2),
+}));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => redirect(url) }));
 vi.mock('next/link', () => ({ default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
 

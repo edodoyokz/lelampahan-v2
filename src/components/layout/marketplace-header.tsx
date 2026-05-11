@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { MobileDrawer } from '@/components/ui/mobile-drawer';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client';
@@ -55,10 +56,12 @@ export function MarketplaceHeader({ user }: MarketplaceHeaderProps) {
             <>
               <div className="flex items-center gap-2">
                 {user.avatarUrl ? (
-                  <img
+                  <Image
                     src={user.avatarUrl}
                     alt={user.name}
-                    className="h-8 w-8 rounded-full object-cover"
+                    width={32}
+                    height={32}
+                    className="rounded-full object-cover"
                   />
                 ) : (
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-lelampahan-gold text-white text-sm font-semibold">
@@ -171,10 +174,12 @@ export function MarketplaceHeader({ user }: MarketplaceHeaderProps) {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                   {user.avatarUrl ? (
-                    <img
+                    <Image
                       src={user.avatarUrl}
                       alt={user.name}
-                      className="h-9 w-9 rounded-full object-cover"
+                      width={36}
+                      height={36}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-lelampahan-gold text-white text-sm font-semibold">

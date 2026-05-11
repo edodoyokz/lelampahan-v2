@@ -37,7 +37,7 @@ export function MarketplaceFooter() {
               </li>
               <li>
                 <Link
-                  href="/"
+                  href="/about"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Tentang Lelampahan
@@ -82,7 +82,7 @@ export function MarketplaceFooter() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/"
+                  href="/terms"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Syarat &amp; Ketentuan
@@ -90,7 +90,7 @@ export function MarketplaceFooter() {
               </li>
               <li>
                 <Link
-                  href="/"
+                  href="/privacy"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Kebijakan Privasi

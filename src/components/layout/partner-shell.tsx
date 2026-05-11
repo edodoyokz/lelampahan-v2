@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/partner', icon: <DashboardIcon /> },
   { label: 'Pengalaman', href: '/partner/listings', icon: <PengalamanIcon /> },
   { label: 'Pesanan', href: '/partner/bookings', icon: <PesananIcon /> },
-  { label: 'Scanner', href: '/partner/scanner', icon: <ScannerIcon /> },
+  { label: 'Pemindai', href: '/partner/scanner', icon: <ScannerIcon /> },
 ];
 
 export function PartnerShell({ children }: PartnerShellProps) {
