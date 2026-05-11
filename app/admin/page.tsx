@@ -8,10 +8,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { QuickActionCard } from '@/components/ui/quick-action-card';
 
 interface DashboardStats {
-  totalPartners: number;
-  totalListings: number;
-  pendingReview: number;
-  revenue: number;
+  partners: { total: number; pendingReview: number; approved: number; rejected: number };
+  listings: { total: number; pendingReview: number; published: number; rejected: number };
+  orders: { total: number; pendingPayment: number; paid: number; completed: number; revenue: number };
 }
 
 function StatCardSkeleton() {
@@ -59,45 +58,6 @@ function CurrencyIcon() {
   );
 }
 
-const statCards = [
-  {
-    key: 'totalPartners',
-    label: 'Total Partner',
-    icon: UsersIcon,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-    valueColor: 'text-lelampahan-earth',
-    format: (v: number) => v.toString(),
-  },
-  {
-    key: 'totalListings',
-    label: 'Total Pengalaman',
-    icon: ListIcon,
-    iconBg: 'bg-green-100',
-    iconColor: 'text-green-600',
-    valueColor: 'text-lelampahan-earth',
-    format: (v: number) => v.toString(),
-  },
-  {
-    key: 'pendingReview',
-    label: 'Menunggu Review',
-    icon: ClockIcon,
-    iconBg: 'bg-yellow-100',
-    iconColor: 'text-yellow-600',
-    valueColor: 'text-yellow-600',
-    format: (v: number) => v.toString(),
-  },
-  {
-    key: 'revenue',
-    label: 'Pendapatan',
-    icon: CurrencyIcon,
-    iconBg: 'bg-lelampahan-cream',
-    iconColor: 'text-lelampahan-gold',
-    valueColor: 'text-lelampahan-earth',
-    format: (v: number) => formatIDR(v),
-  },
-] as const;
-
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,34 +66,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const [partnersRes, listingsRes] = await Promise.all([
-          fetch('/api/admin/partners'),
-          fetch('/api/admin/listings'),
-        ]);
-
-        let totalPartners = 0;
-        let totalListings = 0;
-        let pendingReview = 0;
-
-        if (partnersRes.ok) {
-          const data = await partnersRes.json();
-          totalPartners = data.total ?? 0;
+        const res = await fetch('/api/admin/dashboard');
+        if (!res.ok) {
+          setError('Gagal memuat data dashboard.');
+          setLoading(false);
+          return;
         }
 
-        if (listingsRes.ok) {
-          const data = await listingsRes.json();
-          totalListings = data.total ?? 0;
-          pendingReview = (data.listings ?? []).filter(
-            (l: { status: string }) => l.status === 'PENDING_REVIEW'
-          ).length;
-        }
-
-        setStats({
-          totalPartners,
-          totalListings,
-          pendingReview,
-          revenue: 0, // Pendapatan placeholder — no endpoint available yet
-        });
+        const data = await res.json();
+        setStats(data);
       } catch {
         setError('Gagal memuat data dashboard.');
       } finally {
@@ -143,6 +84,15 @@ export default function AdminDashboard() {
 
     void loadStats();
   }, []);
+
+  const statCards = stats
+    ? [
+        { label: 'Total Partner', value: stats.partners.total, icon: UsersIcon, iconBg: 'bg-blue-100', iconColor: 'text-blue-600', valueColor: 'text-lelampahan-earth', format: (v: number) => v.toString() },
+        { label: 'Total Pengalaman', value: stats.listings.total, icon: ListIcon, iconBg: 'bg-green-100', iconColor: 'text-green-600', valueColor: 'text-lelampahan-earth', format: (v: number) => v.toString() },
+        { label: 'Menunggu Review', value: stats.partners.pendingReview + stats.listings.pendingReview, icon: ClockIcon, iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600', valueColor: 'text-yellow-600', format: (v: number) => v.toString() },
+        { label: 'Pendapatan', value: stats.orders.revenue, icon: CurrencyIcon, iconBg: 'bg-lelampahan-cream', iconColor: 'text-lelampahan-gold', valueColor: 'text-lelampahan-earth', format: (v: number) => formatIDR(v) },
+      ]
+    : [];
 
   return (
     <div>
@@ -157,9 +107,8 @@ export default function AdminDashboard() {
           ? Array.from({ length: 4 }, (_, i) => <StatCardSkeleton key={i} />)
           : statCards.map((card) => {
               const Icon = card.icon;
-              const value = stats?.[card.key as keyof DashboardStats] ?? 0;
               return (
-                <Card key={card.key} variant="elevated" padding="md">
+                <Card key={card.label} variant="elevated" padding="md">
                   <div className="flex items-center gap-4">
                     <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${card.iconBg} ${card.iconColor}`}>
                       <Icon />
@@ -167,7 +116,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm font-medium text-gray-500">{card.label}</p>
                       <p className={`mt-1 text-2xl font-bold ${card.valueColor}`}>
-                        {card.format(value)}
+                        {card.format(card.value)}
                       </p>
                     </div>
                   </div>
