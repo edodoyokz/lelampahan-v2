@@ -6,6 +6,8 @@ import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { formatIDR } from '@/lib/format-currency';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatCard } from '@/components/ui/stat-card';
 
 interface BookingItem {
   id: string;
@@ -200,10 +202,19 @@ export default function BookingsPage() {
     </div>
   );
 
+  const requestedCount = bookings.filter((booking) => booking.status === 'REQUESTED').length;
+  const pendingPaymentCount = bookings.filter((booking) => booking.status === 'PENDING_PAYMENT').length;
+  const approvedCount = bookings.filter((booking) => ['PARTNER_APPROVED', 'PAID', 'COMPLETED'].includes(booking.status)).length;
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Pesanan &amp; Permintaan Booking</h1>
-      <p className="mt-1 text-sm text-gray-500">Kelola pesanan masuk dan request-to-book.</p>
+      <PageHeader title="Pesanan & Permintaan Booking" description="Kelola pesanan masuk dan request-to-book." />
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Permintaan" value={requestedCount} />
+        <StatCard label="Menunggu Pembayaran" value={pendingPaymentCount} />
+        <StatCard label="Disetujui/Selesai" value={approvedCount} />
+      </div>
 
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>

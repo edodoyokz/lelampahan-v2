@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 
 type PindaiResult =
   | {
@@ -88,12 +89,10 @@ export default function PindainerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-lelampahan-earth">Pemindai Tiket</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Pindai QR tiket peserta untuk check-in.
-        </p>
+      <PageHeader title="Pemindai Tiket" description="Pindai QR tiket peserta untuk check-in." />
+
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+        Validasi manual saat ini berjalan dalam mode demo.
       </div>
 
       {/* Camera Area - Large, optimized for mobile portrait */}
