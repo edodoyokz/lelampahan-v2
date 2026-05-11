@@ -17,6 +17,13 @@ const demoAccounts = [
 
 
 
+async function getDashboardDestination() {
+  const response = await fetch('/api/auth/dashboard-destination', { cache: 'no-store' });
+  if (!response.ok) return '/account';
+  const body = await response.json();
+  return typeof body.destination === 'string' ? body.destination : '/account';
+}
+
 function mapAuthError(message: string) {
   const normalized = message.toLowerCase();
 
@@ -65,7 +72,7 @@ export default function LoginPage() {
       setError(mapAuthError(authError.message));
       setLoading(false);
     } else {
-      window.location.href = '/';
+      window.location.assign(await getDashboardDestination());
     }
   };
 

@@ -1,15 +1,19 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import LoginPage from '../../../app/auth/login/page';
 
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
+let mockSignInWithPassword = vi.fn();
+
 vi.mock('@/lib/supabase/browser-client', () => ({
   createSupabaseBrowserClient: () => ({
     auth: {
-      signInWithPassword: vi.fn(),
+      get signInWithPassword() {
+        return mockSignInWithPassword;
+      },
     },
   }),
 }));
@@ -17,6 +21,10 @@ vi.mock('@/lib/supabase/browser-client', () => ({
 describe('LoginPage demo accounts', () => {
   const originalDemoFlag = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN;
   const originalDemoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+
+  beforeEach(() => {
+    mockSignInWithPassword = vi.fn();
+  });
 
   afterEach(() => {
     process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN = originalDemoFlag;
@@ -60,5 +68,52 @@ describe('LoginPage demo accounts', () => {
 
     expect(screen.getByLabelText('Email')).toHaveValue('partner@lelampahan.test');
     expect(screen.getByLabelText('Kata sandi')).toHaveValue('DemoPass123!');
+  });
+});
+
+describe('LoginPage auth redirect', () => {
+  const originalDemoFlag = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN;
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN = originalDemoFlag;
+  });
+
+  it('redirects to dashboard destination after successful login', async () => {
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN = 'false';
+    const assign = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { assign },
+      writable: true,
+    });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ destination: '/admin' }),
+    });
+    mockSignInWithPassword = vi.fn().mockResolvedValue({ error: null });
+
+    render(<LoginPage />);
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@lelampahan.test' } });
+    fireEvent.change(screen.getByLabelText('Kata sandi'), { target: { value: 'Password123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Masuk' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/admin'));
+  });
+
+  it('falls back to /account when dashboard destination lookup fails', async () => {
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN = 'false';
+    const assign = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { assign },
+      writable: true,
+    });
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
+    mockSignInWithPassword = vi.fn().mockResolvedValue({ error: null });
+
+    render(<LoginPage />);
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'customer@lelampahan.test' } });
+    fireEvent.change(screen.getByLabelText('Kata sandi'), { target: { value: 'Password123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Masuk' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/account'));
   });
 });
