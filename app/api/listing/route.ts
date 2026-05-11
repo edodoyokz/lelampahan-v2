@@ -19,7 +19,10 @@ export async function POST(request: Request) {
     if (auth.response) return auth.response;
 
     const body = await parseBody(request);
-    const input = listingSchema.parse({ ...body, partnerId: auth.context.partner.id });
+    const input = listingSchema.parse({
+      ...(typeof body === 'object' && body !== null ? body : {}),
+      partnerId: auth.context.partner.id,
+    });
     const listing = await createListingInDb(input);
     return NextResponse.json(listing, { status: 201 });
   } catch (error) {
