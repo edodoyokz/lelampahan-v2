@@ -22,6 +22,6 @@ describe('Admin listings page', () => {
     expect(screen.getAllByText('Terbit').length).toBeGreaterThanOrEqual(1);
     fireEvent.click(screen.getByRole('button', { name: 'Terbit' }));
     await waitFor(() => expect(screen.queryAllByText('Pending Listing')).toHaveLength(0));
-    expect(screen.getAllByText('Published Listing').length).toBeGreaterThanOrEqual(1);
+    await waitFor(() => expect(screen.getAllByText('Published Listing').length).toBeGreaterThanOrEqual(1));
   });
 });
