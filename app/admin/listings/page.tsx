@@ -8,7 +8,8 @@ import { Modal } from '@/components/ui/modal';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { SearchInput } from '@/components/ui/search-input';
-import { formatListingStatusLabel } from '@/lib/status-labels';
+import { formatListingStatusLabel, formatListingTypeLabel } from '@/lib/status-labels';
+import { useToast } from '@/components/ui/toast';
 
 interface AdminListing {
   id: string;
@@ -37,6 +38,7 @@ export default function AdminListingPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const { showToast } = useToast();
 
   const loadListings = async () => {
     setLoading(true);
@@ -96,6 +98,7 @@ export default function AdminListingPage() {
 
       if (!response.ok) {
         setError('Gagal menyimpan keputusan review.');
+        showToast({ type: 'error', message: 'Gagal menyimpan keputusan. Coba ulangi review pengalaman beberapa saat lagi.' });
         closeModal();
         return;
       }
@@ -107,6 +110,10 @@ export default function AdminListingPage() {
             : l
         )
       );
+      showToast({
+        type: 'success',
+        message: `${modalAction === 'approve' ? 'Pengalaman disetujui' : 'Pengalaman ditolak'}. Keputusan untuk ${selectedListing.title} berhasil disimpan.`,
+      });
       closeModal();
     } catch {
       setError('Gagal menyimpan keputusan review.');
@@ -132,7 +139,7 @@ export default function AdminListingPage() {
     {
       key: 'type',
       header: 'Tipe',
-      render: (item) => <span className="text-gray-600">{item.type}</span>,
+      render: (item) => <span className="text-gray-600">{formatListingTypeLabel(item.type)}</span>,
     },
     {
       key: 'sessions',
@@ -183,7 +190,7 @@ export default function AdminListingPage() {
         <StatusBadge status={getStatusVariant(item.status)} label={formatListingStatusLabel(item.status)} />
       </div>
       <div className="flex items-center gap-4 text-sm text-gray-600">
-        <span>Tipe: {item.type}</span>
+        <span>Tipe: {formatListingTypeLabel(item.type)}</span>
         <span>Sesi: {item._count?.sessions ?? 0}</span>
       </div>
       {item.status === 'PENDING_REVIEW' && (

@@ -21,7 +21,7 @@ type ScanResult =
     }
   | null;
 
-export default function PindainerPage() {
+export default function PemindaiPage() {
   const [scanResult, setScanResult] = useState<ScanResult>(null);
   const [scanning, setScanning] = useState(false);
   const [manualCode, setManualCode] = useState('');

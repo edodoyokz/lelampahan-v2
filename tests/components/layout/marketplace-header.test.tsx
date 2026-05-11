@@ -37,6 +37,7 @@ describe('MarketplaceHeader', () => {
 
     expect(homeLinks.length).toBeGreaterThanOrEqual(1);
     expect(jelajahiLinks.length).toBeGreaterThanOrEqual(1);
+    expect(jelajahiLinks[0].closest('a')).toHaveAttribute('href', '/#explore');
     expect(akunLinks.length).toBeGreaterThanOrEqual(1);
   });
 

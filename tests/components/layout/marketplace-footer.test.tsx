@@ -57,6 +57,12 @@ describe('MarketplaceFooter', () => {
     expect(screen.getByText(/Lelampahan\. Hak cipta dilindungi/i)).toBeInTheDocument();
   });
 
+  it('does not render dead hash social links', () => {
+    const { container } = render(<MarketplaceFooter />);
+    const hashLinks = Array.from(container.querySelectorAll('a[href="#"]'));
+    expect(hashLinks).toHaveLength(0);
+  });
+
   it('applies bg-lelampahan-earth class for dark background', () => {
     const { container } = render(<MarketplaceFooter />);
     const footer = container.querySelector('footer');

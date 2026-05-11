@@ -55,7 +55,7 @@ export function MarketplaceHomepageContent({ listings }: MarketplaceHomepageCont
       <HeroSection onSearch={handleSearch} />
 
       {/* Category Browser */}
-      <section className="mt-8" aria-label="Kategori">
+      <section id="explore" className="mt-8 scroll-mt-24" aria-label="Kategori">
         <CategoryBrowser
           categories={categories}
           activeCategory={activeCategory}

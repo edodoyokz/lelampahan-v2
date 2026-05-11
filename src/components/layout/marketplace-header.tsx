@@ -19,7 +19,7 @@ async function handleLogout() {
 
 const navLinks = [
   { label: 'Beranda', href: '/' },
-  { label: 'Jelajahi', href: '/' },
+  { label: 'Jelajahi', href: '/#explore' },
   { label: 'Akun Saya', href: '/account' },
 ];
 

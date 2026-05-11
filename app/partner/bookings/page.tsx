@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { formatOrderStatusLabel } from '@/lib/status-labels';
+import { useToast } from '@/components/ui/toast';
 
 interface BookingItem {
   id: string;
@@ -40,6 +41,7 @@ export default function BookingsPage() {
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [summary, setSummary] = useState({ requested: 0, pendingPayment: 0, approved: 0, completed: 0 });
+  const { showToast } = useToast();
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -79,6 +81,7 @@ export default function BookingsPage() {
 
     if (!response.ok) {
       setError('Gagal menyimpan keputusan.');
+      showToast({ type: 'error', message: 'Gagal menyimpan keputusan. Coba ulangi keputusan pesanan beberapa saat lagi.' });
       setActionLoading(false);
       setModalAction(null);
       return;
@@ -91,6 +94,10 @@ export default function BookingsPage() {
           : b,
       ),
     );
+    showToast({
+      type: 'success',
+      message: `${modalAction.action === 'approve' ? 'Pesanan disetujui' : 'Pesanan ditolak'}. Keputusan untuk ${modalAction.orderNumber} berhasil disimpan.`,
+    });
     setActionLoading(false);
     setModalAction(null);
   };
@@ -114,7 +121,7 @@ export default function BookingsPage() {
     },
     {
       key: 'listing',
-      header: 'Listing',
+      header: 'Pengalaman',
       render: (item) => (
         <span className="text-gray-600">{item.session?.listing?.title ?? '-'}</span>
       ),

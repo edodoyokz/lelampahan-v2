@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { SearchInput } from '@/components/ui/search-input';
 import { formatPartnerStatusLabel } from '@/lib/status-labels';
+import { useToast } from '@/components/ui/toast';
 
 interface PartnerCapability {
   type: string;
@@ -41,6 +42,7 @@ export default function AdminPartnerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const { showToast } = useToast();
 
   const loadPartners = useCallback(async () => {
     setLoading(true);
@@ -84,6 +86,7 @@ export default function AdminPartnerPage() {
 
     if (!response.ok) {
       setError('Gagal menyimpan keputusan partner.');
+      showToast({ type: 'error', message: 'Gagal menyimpan keputusan. Coba ulangi keputusan partner beberapa saat lagi.' });
       setActionLoading(false);
       setModalAction(null);
       return;
@@ -96,6 +99,10 @@ export default function AdminPartnerPage() {
           : p,
       ),
     );
+    showToast({
+      type: 'success',
+      message: `${modalAction.action === 'approve' ? 'Partner disetujui' : 'Partner ditolak'}. Keputusan untuk ${modalAction.name} berhasil disimpan.`,
+    });
     setActionLoading(false);
     setModalAction(null);
   };

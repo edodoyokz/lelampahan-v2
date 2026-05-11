@@ -36,6 +36,16 @@ const ticketLabels: Record<string, string> = {
   VOID: 'Tidak Berlaku',
 };
 
+const listingTypeLabels: Record<string, string> = {
+  TOUR: 'Tur',
+  EVENT: 'Acara',
+};
+
+const bookingModeLabels: Record<string, string> = {
+  INSTANT_CONFIRMATION: 'Konfirmasi Langsung',
+  REQUEST_TO_BOOK: 'Permintaan Booking',
+};
+
 function labelFrom(map: Record<string, string>, status: string) {
   return map[status] ?? status;
 }
@@ -54,4 +64,12 @@ export function formatOrderStatusLabel(status: string) {
 
 export function formatTicketStatusLabel(status: string) {
   return labelFrom(ticketLabels, status);
+}
+
+export function formatListingTypeLabel(type: string) {
+  return labelFrom(listingTypeLabels, type);
+}
+
+export function formatBookingModeLabel(mode: string) {
+  return labelFrom(bookingModeLabels, mode);
 }

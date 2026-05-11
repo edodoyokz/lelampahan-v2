@@ -4,6 +4,8 @@ import {
   formatOrderStatusLabel,
   formatPartnerStatusLabel,
   formatTicketStatusLabel,
+  formatListingTypeLabel,
+  formatBookingModeLabel,
 } from '@/lib/status-labels';
 
 describe('status label helpers', () => {
@@ -12,6 +14,8 @@ describe('status label helpers', () => {
     expect(formatPartnerStatusLabel('APPROVED')).toBe('Disetujui');
     expect(formatOrderStatusLabel('PENDING_PAYMENT')).toBe('Menunggu Pembayaran');
     expect(formatTicketStatusLabel('ISSUED')).toBe('Terbit');
+    expect(formatListingTypeLabel('TOUR')).toBe('Tur');
+    expect(formatBookingModeLabel('INSTANT_CONFIRMATION')).toBe('Konfirmasi Langsung');
   });
 
   it('falls back to raw status for unknown values', () => {
