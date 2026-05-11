@@ -7,12 +7,12 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { QuickActionCard } from '@/components/ui/quick-action-card';
 
-interface PartnerContext {
-  role: string;
-  partner: { id: string; name: string; status: string };
+interface PartnerDashboardData {
+  partner: { id: string; name: string; status: string; role: string };
+  listings: { total: number; draft: number; pendingReview: number; published: number; rejected: number };
+  bookings: { requested: number; pendingPayment: number; approved: number; completed: number; monthCount: number };
+  revenue: { monthGross: number; estimatedPayout: number };
 }
-
-interface ListingSummary { status: string }
 
 function DashboardSkeleton() {
   return (
@@ -21,45 +21,29 @@ function DashboardSkeleton() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <SkeletonLoader variant="card" />
         <SkeletonLoader variant="card" />
-        <SkeletonLoader variant="card" />
-        <SkeletonLoader variant="card" />
       </div>
     </div>
   );
 }
 
 export default function PartnerDashboard() {
-  const [context, setContext] = useState<PartnerContext | null>(null);
-  const [activeListings, setActiveListings] = useState(0);
-  const [draftReviewListings, setDraftReviewListings] = useState(0);
-  const [monthlyOrders, setMonthlyOrders] = useState(0);
-  const [estimatedRevenue, setEstimatedRevenue] = useState(0);
+  const [dashboard, setDashboard] = useState<PartnerDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const contextResponse = await fetch('/api/partner/me', { cache: 'no-store' });
-        if (!contextResponse.ok) {
-          setError(contextResponse.status === 404 ? 'Akun belum terhubung ke partner.' : 'Masuk sebagai partner diperlukan.');
+        const res = await fetch('/api/partner/dashboard', { cache: 'no-store' });
+        if (!res.ok) {
+          if (res.status === 404) setError('Akun belum terhubung ke partner.');
+          else setError('Masuk sebagai partner diperlukan.');
           setLoading(false);
           return;
         }
 
-        const partnerContext = await contextResponse.json();
-        setContext(partnerContext);
-
-        const listingsResponse = await fetch(`/api/partner/${partnerContext.partner.id}/listings`, { cache: 'no-store' });
-        if (listingsResponse.ok) {
-          const listingsData = await listingsResponse.json();
-          const listings: ListingSummary[] = listingsData.listings ?? [];
-          setActiveListings(listings.filter((listing) => listing.status === 'PUBLISHED').length);
-          setDraftReviewListings(listings.filter((listing) => ['DRAFT', 'PENDING_REVIEW'].includes(listing.status)).length);
-        }
-
-        setMonthlyOrders(0);
-        setEstimatedRevenue(0);
+        const data = await res.json();
+        setDashboard(data);
       } catch {
         setError('Gagal memuat data dashboard.');
       } finally {
@@ -81,21 +65,37 @@ export default function PartnerDashboard() {
     );
   }
 
+  if (!dashboard) return null;
+
+  const isApproved = dashboard.partner.status === 'APPROVED';
+  const isRejected = dashboard.partner.status === 'REJECTED';
+
   return (
     <div className="space-y-8">
       <PageHeader title="Dashboard Partner" description="Ringkasan performa dan operasional partner." />
 
-      {context && (
-        <div className="rounded-xl border border-lelampahan-gold/20 bg-lelampahan-cream/70 p-4 text-sm text-lelampahan-earth">
-          {context.partner.name} · {context.role} · {context.partner.status}
-        </div>
+      {/* Partner status card */}
+      <div className="rounded-xl border border-lelampahan-gold/20 bg-lelampahan-cream/70 p-4 text-sm text-lelampahan-earth">
+        {dashboard.partner.name} · {dashboard.partner.role} · {dashboard.partner.status}
+      </div>
+
+      {/* Status messages for non-approved partners */}
+      {isRejected && (
+        <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+          Pendaftaran partner ditolak. Hubungi admin untuk peninjauan ulang.
+        </p>
+      )}
+      {!isApproved && !isRejected && (
+        <p className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
+          Pendaftaran partner sedang menunggu review admin.
+        </p>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Pengalaman Aktif" value={activeListings} />
-        <StatCard label="Draft/Review" value={draftReviewListings} helper="Butuh dilengkapi atau menunggu admin" />
-        <StatCard label="Pesanan Bulan Ini" value={monthlyOrders} helper="Endpoint laporan belum aktif" />
-        <StatCard label="Pendapatan Estimasi" value={formatIDR(estimatedRevenue)} helper="Placeholder sampai laporan aktif" />
+        <StatCard label="Pengalaman Aktif" value={dashboard.listings.published} />
+        <StatCard label="Draft/Review" value={dashboard.listings.draft + dashboard.listings.pendingReview} helper="Butuh dilengkapi atau menunggu admin" />
+        <StatCard label="Pesanan Bulan Ini" value={dashboard.bookings.monthCount} />
+        <StatCard label="Pendapatan Estimasi" value={formatIDR(dashboard.revenue.estimatedPayout)} />
       </div>
 
       <div>
@@ -103,8 +103,12 @@ export default function PartnerDashboard() {
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
           <QuickActionCard title="Buat Pengalaman" description="Tambahkan tur atau acara baru." href="/partner/listings/new" />
           <QuickActionCard title="Kelola Pengalaman" description="Edit listing dan sesi yang sudah dibuat." href="/partner/listings" />
-          <QuickActionCard title="Lihat Pesanan" description="Kelola pesanan masuk." href="/partner/bookings" />
-          <QuickActionCard title="Pindai Tiket" description="Validasi tiket peserta." href="/partner/scanner" />
+          {isApproved && (
+            <>
+              <QuickActionCard title="Lihat Pesanan" description="Kelola pesanan masuk." href="/partner/bookings" />
+              <QuickActionCard title="Pindai Tiket" description="Validasi tiket peserta." href="/partner/scanner" />
+            </>
+          )}
         </div>
       </div>
     </div>
