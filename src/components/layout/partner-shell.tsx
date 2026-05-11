@@ -3,9 +3,12 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarNavigation, type NavItem } from '@/components/layout/sidebar-navigation';
+import { DashboardTopbar } from '@/components/layout/dashboard-topbar';
 
 interface PartnerShellProps {
   children: React.ReactNode;
+  userLabel: string;
+  partnerName?: string;
 }
 
 const DashboardIcon = () => (
@@ -36,10 +39,10 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/partner', icon: <DashboardIcon /> },
   { label: 'Pengalaman', href: '/partner/listings', icon: <PengalamanIcon /> },
   { label: 'Pesanan', href: '/partner/bookings', icon: <PesananIcon /> },
-  { label: 'Scanner', href: '/partner/scanner', icon: <ScannerIcon /> },
+  { label: 'Pemindai', href: '/partner/scanner', icon: <ScannerIcon /> },
 ];
 
-export function PartnerShell({ children }: PartnerShellProps) {
+export function PartnerShell({ children, userLabel, partnerName }: PartnerShellProps) {
   const pathname = usePathname();
 
   return (
@@ -51,6 +54,7 @@ export function PartnerShell({ children }: PartnerShellProps) {
         mobileVariant="bottom-nav"
       />
       <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6">
+        <DashboardTopbar title="Dashboard Partner" userLabel={userLabel} role="PARTNER" partnerName={partnerName} />
         {children}
       </main>
     </div>

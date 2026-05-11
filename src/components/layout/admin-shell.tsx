@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarNavigation, type NavItem } from '@/components/layout/sidebar-navigation';
-import { RoleBadge } from '@/components/ui/role-badge';
+import { DashboardTopbar } from '@/components/layout/dashboard-topbar';
 
 function Icon({ children }: { children: React.ReactNode }) {
   return <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>{children}</svg>;
@@ -24,9 +24,10 @@ const superAdminNavItems: NavItem[] = [
 interface AdminShellProps {
   children: React.ReactNode;
   role?: 'ADMIN' | 'SUPER_ADMIN';
+  userLabel: string;
 }
 
-export function AdminShell({ children, role = 'ADMIN' }: AdminShellProps) {
+export function AdminShell({ children, role = 'ADMIN', userLabel }: AdminShellProps) {
   const pathname = usePathname();
   const items = role === 'SUPER_ADMIN' ? [...adminNavItems, ...superAdminNavItems] : adminNavItems;
 
@@ -34,7 +35,7 @@ export function AdminShell({ children, role = 'ADMIN' }: AdminShellProps) {
     <div className="flex min-h-screen">
       <SidebarNavigation items={items} currentPath={pathname} title="Admin" mobileVariant="drawer" />
       <main className="flex-1 min-w-0 p-6">
-        {role === 'SUPER_ADMIN' && <div className="mb-4"><RoleBadge role="SUPER_ADMIN" /></div>}
+        <DashboardTopbar title="Admin Dashboard" userLabel={userLabel} role={role} />
         {children}
       </main>
     </div>

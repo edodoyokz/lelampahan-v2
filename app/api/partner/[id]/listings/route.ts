@@ -13,9 +13,13 @@ export async function GET(request: Request, { params }: Props) {
     if (auth.response) return auth.response;
 
     const { id } = await params;
-    const listings = await listListingsForPartner(id);
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status') ?? undefined;
+    const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
+    const pageSize = url.searchParams.get('pageSize') ? Number(url.searchParams.get('pageSize')) : undefined;
+    const { listings, total } = await listListingsForPartner(id, status, page, pageSize);
 
-    return NextResponse.json({ listings, total: listings.length });
+    return NextResponse.json({ listings, total });
   } catch (error) {
     return handleApiError(error);
   }

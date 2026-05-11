@@ -29,7 +29,7 @@ export function MarketplaceFooter() {
               </li>
               <li>
                 <Link
-                  href="/"
+                  href="/#explore"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Jelajahi Pengalaman
@@ -37,7 +37,7 @@ export function MarketplaceFooter() {
               </li>
               <li>
                 <Link
-                  href="/"
+                  href="/about"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Tentang Lelampahan
@@ -53,23 +53,11 @@ export function MarketplaceFooter() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li className="text-white/80">info@lelampahan.com</li>
-              <li>
-                <a
-                  href="#"
-                  className="text-white/80 transition-colors hover:text-white"
-                  aria-label="Instagram"
-                >
-                  Instagram
-                </a>
+              <li className="text-white/60" aria-label="Instagram belum tersedia">
+                Instagram segera hadir
               </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-white/80 transition-colors hover:text-white"
-                  aria-label="Facebook"
-                >
-                  Facebook
-                </a>
+              <li className="text-white/60" aria-label="Facebook belum tersedia">
+                Facebook segera hadir
               </li>
             </ul>
           </div>
@@ -82,7 +70,7 @@ export function MarketplaceFooter() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/"
+                  href="/terms"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Syarat &amp; Ketentuan
@@ -90,7 +78,7 @@ export function MarketplaceFooter() {
               </li>
               <li>
                 <Link
-                  href="/"
+                  href="/privacy"
                   className="text-white/80 transition-colors hover:text-white"
                 >
                   Kebijakan Privasi

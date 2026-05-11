@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { QuickActionCard } from '@/components/ui/quick-action-card';
+import { findOrderCountByUser, findPendingPaymentOrderCountByUser } from '@/data/order';
+import { findActiveTicketCountByUser } from '@/data/ticket';
 
 export default async function AccountProfilePage() {
   const user = await getCurrentUser();
@@ -19,7 +19,11 @@ export default async function AccountProfilePage() {
     user.email?.split('@')[0] ||
     'Pengguna';
 
-  const email = user.email || '-';
+  const [totalOrders, activeTickets, pendingPayments] = await Promise.all([
+    findOrderCountByUser(user.id),
+    findActiveTicketCountByUser(user.id),
+    findPendingPaymentOrderCountByUser(user.id),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -31,9 +35,9 @@ export default async function AccountProfilePage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Pesanan" value="0" helper="Riwayat booking Anda" />
-        <StatCard label="Tiket Aktif" value="0" helper="Siap digunakan saat check-in" />
-        <StatCard label="Menunggu Pembayaran" value="0" helper="Selesaikan sebelum kedaluwarsa" />
+        <StatCard label="Total Pesanan" value={totalOrders} helper="Riwayat booking Anda" />
+        <StatCard label="Tiket Aktif" value={activeTickets} helper="Siap digunakan saat check-in" />
+        <StatCard label="Menunggu Pembayaran" value={pendingPayments} helper="Selesaikan sebelum kedaluwarsa" />
       </div>
 
       <div>
@@ -42,33 +46,22 @@ export default async function AccountProfilePage() {
           <QuickActionCard title="Jelajahi Pengalaman" description="Temukan tur, event, dan aktivitas budaya di Yogyakarta." href="/" />
           <QuickActionCard title="Tiket Saya" description="Lihat tiket QR untuk pesanan yang sudah dibayar." href="/account/tickets" />
           <QuickActionCard title="Riwayat Pesanan" description="Cek status booking dan pembayaran Anda." href="/account/orders" />
+          {pendingPayments > 0 && (
+            <QuickActionCard title="Lanjutkan Pembayaran" description="Selesaikan pesanan yang masih menunggu pembayaran." href="/account/orders" />
+          )}
         </div>
       </div>
 
-      <Card variant="elevated" padding="lg">
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lelampahan-gold text-xl font-semibold text-white">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-lelampahan-earth">Profil Akun</h2>
-              <p className="text-sm text-gray-500">{email}</p>
-            </div>
-          </div>
-
-          <hr className="border-gray-200" />
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Input label="Nama" value={displayName} readOnly className="bg-gray-50 cursor-default" />
-            <Input label="Email" value={email} readOnly className="bg-gray-50 cursor-default" />
-          </div>
-
-          <p className="text-xs text-gray-400">
-            Informasi profil dikelola melalui akun autentikasi Anda. Hubungi admin jika perlu mengubah data.
-          </p>
+      {/* Compact profile summary */}
+      <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lelampahan-gold text-xl font-semibold text-white">
+          {displayName.charAt(0).toUpperCase()}
         </div>
-      </Card>
+        <div>
+          <p className="font-semibold text-lelampahan-earth">{displayName}</p>
+          <p className="text-sm text-gray-500">{user.email ?? '-'}</p>
+        </div>
+      </div>
     </div>
   );
 }

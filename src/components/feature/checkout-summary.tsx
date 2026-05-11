@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/format-currency";
@@ -151,12 +152,14 @@ export function CheckoutSummary({
             <div className="space-y-4">
               {/* Kode QR Display */}
               <div className="flex justify-center">
-                <div className="w-56 h-56 border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                <div className="relative w-56 h-56 border border-gray-200 rounded-lg overflow-hidden bg-white">
                   {qrisUrl ? (
-                    <img
+                    <Image
                       src={qrisUrl}
                       alt="QRIS Kode QR"
-                      className="w-full h-full object-contain p-2"
+                      fill
+                      sizes="224px"
+                      className="object-contain p-2"
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">

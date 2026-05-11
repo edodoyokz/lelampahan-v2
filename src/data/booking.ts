@@ -203,21 +203,39 @@ export async function findOrdersByUser(userId: string) {
   });
 }
 
-export async function findOrdersByPartnerId(partnerId: string, status?: string) {
-  return prisma.order.findMany({
-    where: {
-      session: { listing: { partnerId } },
-      ...(status ? { status: status as OrderStatus } : {}),
-    },
-    include: {
-      items: { include: { ticketType: true } },
-      payment: true,
-      participants: true,
-      session: { include: { listing: true } },
-      reservation: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+export async function findOrdersByPartnerId(partnerId: string, status?: string, page?: number, pageSize?: number) {
+  const skip = page && pageSize ? (page - 1) * pageSize : undefined;
+  const where = {
+    session: { listing: { partnerId } },
+    ...(status ? { status: status as OrderStatus } : {}),
+  };
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: {
+        items: { include: { ticketType: true } },
+        payment: true,
+        participants: true,
+        session: { include: { listing: true } },
+        reservation: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+    }),
+    prisma.order.count({ where }),
+  ]);
+  return { orders, total };
+}
+
+export async function getPartnerBookingSummary(partnerId: string) {
+  const where = { session: { listing: { partnerId } } };
+  const [pendingPayment, approved, completed] = await Promise.all([
+    prisma.order.count({ where: { ...where, status: OrderStatus.PENDING_PAYMENT } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.PAID } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.COMPLETED } }),
+  ]);
+  return { requested: 0, pendingPayment, approved, completed };
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {

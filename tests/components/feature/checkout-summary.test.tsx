@@ -73,7 +73,7 @@ describe('CheckoutSummary', () => {
       );
       const qrImage = screen.getByAltText('QRIS Kode QR');
       expect(qrImage).toBeInTheDocument();
-      expect(qrImage).toHaveAttribute('src', 'https://example.com/qr.png');
+      expect(qrImage.getAttribute('src')).toContain(encodeURIComponent('https://example.com/qr.png'));
     });
 
     it('renders countdown timer when not expired', () => {

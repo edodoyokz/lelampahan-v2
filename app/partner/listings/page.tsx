@@ -7,6 +7,7 @@ import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 import { PageHeader } from '@/components/ui/page-header';
+import { formatListingStatusLabel, formatListingTypeLabel } from '@/lib/status-labels';
 
 interface PartnerListing {
   id: string;
@@ -21,6 +22,8 @@ interface PartnerContext {
   partner: { id: string; name: string; status: string };
 }
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export default function ListingManagement() {
   const [listings, setPengalaman] = useState<PartnerListing[]>([]);
   const [context, setContext] = useState<PartnerContext | null>(null);
@@ -28,6 +31,8 @@ export default function ListingManagement() {
   const [error, setError] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadPengalaman = async () => {
     setLoading(true);
@@ -47,8 +52,12 @@ export default function ListingManagement() {
     const partnerContext = await contextResponse.json();
     setContext(partnerContext);
 
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('pageSize', String(DEFAULT_PAGE_SIZE));
+    if (statusFilter !== 'ALL') params.set('status', statusFilter);
     const response = await fetch(
-      `/api/partner/${partnerContext.partner.id}/listings`,
+      `/api/partner/${partnerContext.partner.id}/listings?${params.toString()}`,
       { cache: 'no-store' }
     );
     if (!response.ok) {
@@ -59,6 +68,7 @@ export default function ListingManagement() {
 
     const data = await response.json();
     setPengalaman(data.listings ?? []);
+    setTotalItems(data.total ?? 0);
     setLoading(false);
   };
 
@@ -79,7 +89,7 @@ export default function ListingManagement() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadPengalaman();
-  }, []);
+  }, [page, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: Column<PartnerListing>[] = [
     {
@@ -92,7 +102,7 @@ export default function ListingManagement() {
     {
       key: 'type',
       header: 'Tipe',
-      render: (item) => <span className="text-gray-600">{item.type}</span>,
+      render: (item) => <span className="text-gray-600">{formatListingTypeLabel(item.type)}</span>,
     },
     {
       key: 'status',
@@ -100,7 +110,7 @@ export default function ListingManagement() {
       render: (item) => (
         <StatusBadge
           status={getStatusVariant(item.status)}
-          label={item.status}
+          label={formatListingStatusLabel(item.status)}
         />
       ),
     },
@@ -142,11 +152,11 @@ export default function ListingManagement() {
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-medium text-gray-900">{item.title}</h3>
-          <p className="text-sm text-gray-500">{item.type}</p>
+          <p className="text-sm text-gray-500">{formatListingTypeLabel(item.type)}</p>
         </div>
         <StatusBadge
           status={getStatusVariant(item.status)}
-          label={item.status}
+          label={formatListingStatusLabel(item.status)}
         />
       </div>
       <div className="flex items-center justify-between text-sm text-gray-500">
@@ -183,8 +193,6 @@ export default function ListingManagement() {
     );
   }
 
-  const filteredListings = statusFilter === 'ALL' ? listings : listings.filter((listing) => listing.status === statusFilter);
-
   return (
     <div>
       <PageHeader title="Pengalaman" description={context ? `${context.partner.name} · ${context.role} · ${context.partner.status}` : 'Kelola pengalaman yang Anda tawarkan.'} action={{ label: '+ Listing Baru', href: '/partner/listings/new' }} />
@@ -192,7 +200,10 @@ export default function ListingManagement() {
       <div className="mt-6">
         <StatusFilterTabs
           value={statusFilter}
-          onChange={setStatusFilter}
+          onChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
           options={[
             { label: 'Semua', value: 'ALL' },
             { label: 'Draft', value: 'DRAFT' },
@@ -206,7 +217,7 @@ export default function ListingManagement() {
       <div className="mt-6">
         <DataTable<PartnerListing>
           columns={columns}
-          data={filteredListings}
+          data={listings}
           loading={loading}
           mobileCardRender={mobileCardRender}
           emptyState={{
@@ -218,6 +229,10 @@ export default function ListingManagement() {
               href: '/partner/listings/new',
             },
           }}
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          totalItems={totalItems}
+          onPageChange={setPage}
         />
       </div>
     </div>

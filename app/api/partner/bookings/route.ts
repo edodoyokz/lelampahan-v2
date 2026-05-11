@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { findOrdersByPartnerId } from '@/data/booking';
+import { findOrdersByPartnerId, getPartnerBookingSummary } from '@/data/booking';
 import { findPartnerContextByAuthUserId } from '@/data/partner';
 import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError } from '@/lib/errors';
@@ -16,9 +16,12 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const status = url.searchParams.get('status') ?? undefined;
-    const orders = await findOrdersByPartnerId(context.partner.id, status);
+    const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
+    const pageSize = url.searchParams.get('pageSize') ? Number(url.searchParams.get('pageSize')) : undefined;
+    const { orders, total } = await findOrdersByPartnerId(context.partner.id, status, page, pageSize);
+    const summary = await getPartnerBookingSummary(context.partner.id);
 
-    return NextResponse.json({ orders, total: orders.length });
+    return NextResponse.json({ orders, total, summary });
   } catch (error) {
     return handleApiError(error);
   }

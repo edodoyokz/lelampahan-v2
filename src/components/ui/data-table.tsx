@@ -3,6 +3,7 @@
 import React from 'react';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { EmptyState, type EmptyStateProps } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
 
 export interface Column<T> {
   key: string;
@@ -17,6 +18,14 @@ export interface DataTableProps<T> {
   loading?: boolean;
   emptyState?: EmptyStateProps;
   mobileCardRender?: (item: T) => React.ReactNode;
+  /** Current page number (1-indexed) */
+  page?: number;
+  /** Number of items per page */
+  pageSize?: number;
+  /** Total number of items (for server-side pagination) */
+  totalItems?: number;
+  /** Called when page changes */
+  onPageChange?: (page: number) => void;
 }
 
 function LoadingSkeleton({ rows = 5 }: { rows?: number }) {
@@ -29,12 +38,60 @@ function LoadingSkeleton({ rows = 5 }: { rows?: number }) {
   );
 }
 
+function Pagination({
+  page,
+  pageSize,
+  totalItems,
+  onPageChange,
+}: {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
+      <div className="text-sm text-gray-500">
+        Menampilkan {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, totalItems)} dari {totalItems}
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          Sebelumnya
+        </Button>
+        <span className="text-sm text-gray-600">
+          {page} / {totalPages}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+        >
+          Selanjutnya
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function DataTable<T>({
   columns,
   data,
   loading = false,
   emptyState,
   mobileCardRender,
+  page,
+  pageSize,
+  totalItems,
+  onPageChange,
 }: DataTableProps<T>) {
   if (loading) {
     return <LoadingSkeleton />;
@@ -50,6 +107,8 @@ export function DataTable<T>({
       />
     );
   }
+
+  const showPagination = page !== undefined && pageSize !== undefined && totalItems !== undefined && onPageChange;
 
   return (
     <>
@@ -111,6 +170,16 @@ export function DataTable<T>({
               </div>
             ))}
       </div>
+
+      {/* Pagination */}
+      {showPagination && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={onPageChange}
+        />
+      )}
     </>
   );
 }

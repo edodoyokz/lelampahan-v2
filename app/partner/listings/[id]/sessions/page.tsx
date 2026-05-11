@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 
 interface TicketType {
   name: string;
@@ -39,6 +41,7 @@ export default function SessionsPage() {
     message: 'Memuat sesi...',
     type: 'info',
   });
+  const { showToast } = useToast();
 
   const loadSessions = useCallback(async () => {
     setStatus({ message: 'Memuat sesi...', type: 'info' });
@@ -118,10 +121,12 @@ export default function SessionsPage() {
 
     if (!response.ok) {
       setStatus({ message: 'Gagal menyimpan sesi.', type: 'info' });
+      showToast({ type: 'error', message: 'Gagal menyimpan sesi. Coba ulangi penyimpanan jadwal dan tiket beberapa saat lagi.' });
       return;
     }
 
     setStatus({ message: 'Sesi berhasil disimpan.', type: 'success' });
+    showToast({ type: 'success', message: 'Sesi berhasil disimpan. Jadwal dan tiket pengalaman berhasil diperbarui.' });
   };
 
   return (
@@ -149,8 +154,9 @@ export default function SessionsPage() {
 
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div>
-              <label className="text-xs font-medium text-gray-500">Mulai</label>
+              <label htmlFor={`session-${sIdx}-starts-at`} className="text-xs font-medium text-gray-500">Mulai</label>
               <input
+                id={`session-${sIdx}-starts-at`}
                 type="datetime-local"
                 value={session.startsAt}
                 onChange={(e) => {
@@ -162,8 +168,9 @@ export default function SessionsPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">Selesai</label>
+              <label htmlFor={`session-${sIdx}-ends-at`} className="text-xs font-medium text-gray-500">Selesai</label>
               <input
+                id={`session-${sIdx}-ends-at`}
                 type="datetime-local"
                 value={session.endsAt}
                 onChange={(e) => {
@@ -175,8 +182,9 @@ export default function SessionsPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">Kapasitas</label>
+              <label htmlFor={`session-${sIdx}-capacity`} className="text-xs font-medium text-gray-500">Kapasitas</label>
               <input
+                id={`session-${sIdx}-capacity`}
                 type="number"
                 min={1}
                 value={session.capacity}
@@ -189,8 +197,9 @@ export default function SessionsPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">Batas Waktu Booking</label>
+              <label htmlFor={`session-${sIdx}-booking-cutoff`} className="text-xs font-medium text-gray-500">Batas Waktu Booking</label>
               <input
+                id={`session-${sIdx}-booking-cutoff`}
                 type="datetime-local"
                 value={session.bookingCutoff}
                 onChange={(e) => {
@@ -249,12 +258,9 @@ export default function SessionsPage() {
       </button>
 
       <div className="mt-8 flex items-center justify-between">
-        <button
-          onClick={handleSave}
-          className="rounded-lg bg-lelampahan-gold px-6 py-2 font-medium text-white hover:bg-lelampahan-brick"
-        >
+        <Button onClick={handleSave} variant="primary">
           Simpan Semua
-        </button>
+        </Button>
       </div>
     </div>
   );

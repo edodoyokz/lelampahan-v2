@@ -16,7 +16,7 @@ describe('Ticket wallet page', () => {
     const ui = await TicketWalletPage();
     render(ui);
     expect(screen.getByText('Tiket Saya')).toBeInTheDocument();
-    expect(screen.getByText('Tunjukkan kode tiket ini saat check-in di lokasi pengalaman.')).toBeInTheDocument();
+    expect(screen.getByText('Tunjukkan QR code ini saat check-in di lokasi pengalaman.')).toBeInTheDocument();
     expect(screen.getByText('TICKET-123')).toBeInTheDocument();
   });
 });

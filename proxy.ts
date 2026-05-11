@@ -1,11 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { canAccessAdminRoute, canAccessPartnerRoute, getUserRole } from '@/lib/auth/roles';
+import { canAccessAdminRoute, canAccessPartnerRoute, canAccessSuperAdminRoute, getUserRole } from '@/lib/auth/roles';
 
 const partnerRoutes = ['/partner'];
 const adminRoutes = ['/admin'];
+const superAdminRoutes = ['/admin/users', '/admin/audit', '/admin/settings'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
@@ -50,7 +51,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
 
-    if (!canAccessAdminRoute(getUserRole(user))) {
+    const role = getUserRole(user);
+
+    if (superAdminRoutes.some((route) => pathname.startsWith(route)) && !canAccessSuperAdminRoute(role)) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+
+    if (!canAccessAdminRoute(role)) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }

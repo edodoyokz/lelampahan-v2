@@ -1,112 +1,169 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/page-header';
 
-type PindaiResult =
+type ScanResult =
   | {
       type: 'success';
       participantName: string;
-      listingTitle: string;
-      sessionInfo: string;
+      ticketCode: string;
+      checkedInAt: string;
     }
   | {
       type: 'error';
-      reason: string;
+      result: string;
+      message: string;
     }
   | null;
 
-export default function PindainerPage() {
-  const [scanResult, setPindaiResult] = useState<PindaiResult>(null);
-  const [scanning, setPindaining] = useState(false);
+export default function PemindaiPage() {
+  const [scanResult, setScanResult] = useState<ScanResult>(null);
+  const [scanning, setScanning] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [validating, setValidating] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const lastScannedCodeRef = useRef<string>('');
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.stop().catch(() => {});
+        } catch {
+          // ignore cleanup errors
+        }
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const validateTicket = useCallback(async (ticketCode: string) => {
+    // Debounce: prevent scanning the same code repeatedly
+    if (ticketCode === lastScannedCodeRef.current) return;
+    lastScannedCodeRef.current = ticketCode;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Small delay to avoid rapid re-scans
+    debounceTimerRef.current = setTimeout(async () => {
+      setValidating(true);
+      try {
+        const response = await fetch('/api/partner/scanner/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticketCode }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.type === 'success') {
+          setScanResult({
+            type: 'success',
+            participantName: data.participantName ?? 'Peserta',
+            ticketCode: data.ticketCode,
+            checkedInAt: data.checkedInAt,
+          });
+        } else {
+          setScanResult({
+            type: 'error',
+            result: data.result ?? 'INVALID_TICKET',
+            message: data.message ?? 'Tiket tidak valid atau sudah digunakan.',
+          });
+        }
+      } catch {
+        setScanResult({
+          type: 'error',
+          result: 'NETWORK_ERROR',
+          message: 'Gagal terhubung ke server. Periksa koneksi internet Anda.',
+        });
+      } finally {
+        setValidating(false);
+      }
+    }, 300);
+  }, []);
+
+  const onScanSuccess = useCallback(
+    (decodedText: string) => {
+      void validateTicket(decodedText);
+    },
+    [validateTicket],
+  );
 
   const startCamera = async () => {
-    setPindaining(true);
-    setPindaiResult(null);
+    setScanning(true);
+    setScanResult(null);
+    setCameraError(null);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
+      const html5QrCode = new Html5Qrcode('qr-reader');
+      scannerRef.current = html5QrCode;
 
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch {
-      setPindaiResult({
-        type: 'error',
-        reason: 'Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.',
-      });
-      setPindaining(false);
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        onScanSuccess,
+        () => {
+          // ignore failed scan frames
+        },
+      );
+    } catch (error) {
+      setCameraError(
+        'Tidak dapat mengakses kamera. Pastikan izin kamera diberikan dan tidak digunakan oleh aplikasi lain.',
+      );
+      setScanning(false);
     }
   };
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+  const stopCamera = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        await scannerRef.current.clear();
+      } catch {
+        // ignore cleanup errors
+      }
+      scannerRef.current = null;
     }
-    setPindaining(false);
+    setScanning(false);
   };
 
   const handleManualSubmit = async () => {
     if (!manualCode.trim()) return;
-
-    setValidating(true);
-    setPindaiResult(null);
-
-    // Simulate validation — replace with actual API call
-    setTimeout(() => {
-      if (manualCode.trim().toLowerCase() === 'invalid') {
-        setPindaiResult({
-          type: 'error',
-          reason: 'Tiket tidak valid atau sudah digunakan.',
-        });
-      } else {
-        setPindaiResult({
-          type: 'success',
-          participantName: 'Peserta',
-          listingTitle: 'Tour Candi Prambanan',
-          sessionInfo: '25 Jan 2025, 09:00 WIB',
-        });
-      }
-      setValidating(false);
-      setManualCode('');
-    }, 1000);
+    setScanResult(null);
+    lastScannedCodeRef.current = '';
+    await validateTicket(manualCode.trim());
   };
 
   const dismissResult = () => {
-    setPindaiResult(null);
+    setScanResult(null);
   };
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Pemindai Tiket" description="Pindai QR tiket peserta untuk check-in." />
 
-      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-        Validasi manual saat ini berjalan dalam mode demo.
-      </div>
-
       {/* Camera Area - Large, optimized for mobile portrait */}
       <Card variant="outlined" padding="sm" className="overflow-hidden">
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-gray-900">
-          {scanning ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
+        <div
+          id="qr-reader"
+          className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-gray-900"
+        >
+          {!scanning && !cameraError && (
             <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-gray-400">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -135,10 +192,10 @@ export default function PindainerPage() {
             </div>
           )}
 
-          {/* Pindai overlay frame when camera is active */}
-          {scanning && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-48 w-48 rounded-2xl border-2 border-white/60" />
+          {cameraError && (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center text-red-400">
+              <p className="text-sm font-medium">Gagal mengakses kamera</p>
+              <p className="text-xs text-red-300">{cameraError}</p>
             </div>
           )}
         </div>
@@ -146,7 +203,7 @@ export default function PindainerPage() {
         {/* Camera controls */}
         <div className="mt-3 flex gap-3">
           {!scanning ? (
-            <Button variant="primary" size="md" onClick={startCamera} className="flex-1">
+            <Button variant="primary" size="md" onClick={startCamera} className="flex-1" disabled={validating}>
               Aktifkan Kamera
             </Button>
           ) : (
@@ -157,14 +214,13 @@ export default function PindainerPage() {
         </div>
       </Card>
 
-      {/* Pindai Result Feedback */}
+      {/* Scan Result Feedback */}
       {scanResult && scanResult.type === 'success' && (
         <div
           className="flex flex-col items-center gap-4 rounded-xl bg-green-50 border border-green-200 p-6 text-center"
           role="alert"
           aria-live="polite"
         >
-          {/* Large checkmark icon */}
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -186,12 +242,8 @@ export default function PindainerPage() {
                 {scanResult.participantName}
               </p>
               <p>
-                <span className="font-medium">Listing:</span>{' '}
-                {scanResult.listingTitle}
-              </p>
-              <p>
-                <span className="font-medium">Sesi:</span>{' '}
-                {scanResult.sessionInfo}
+                <span className="font-medium">Kode Tiket:</span>{' '}
+                {scanResult.ticketCode}
               </p>
             </div>
           </div>
@@ -207,7 +259,6 @@ export default function PindainerPage() {
           role="alert"
           aria-live="polite"
         >
-          {/* Large X icon */}
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -223,7 +274,7 @@ export default function PindainerPage() {
           </div>
           <div>
             <p className="text-lg font-bold text-red-800">Validasi Gagal</p>
-            <p className="mt-1 text-sm text-red-700">{scanResult.reason}</p>
+            <p className="mt-1 text-sm text-red-700">{scanResult.message}</p>
           </div>
           <Button variant="ghost" size="sm" onClick={dismissResult}>
             Tutup

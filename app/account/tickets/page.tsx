@@ -2,10 +2,12 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { PageHeader } from '@/components/ui/page-header';
+import { formatTicketStatusLabel } from '@/lib/status-labels';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { findTicketsByUser } from '@/data/ticket';
 import { redirect } from 'next/navigation';
 import { Ticket } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default async function TicketWalletPage() {
   const user = await getCurrentUser();
@@ -17,7 +19,7 @@ export default async function TicketWalletPage() {
     <div>
       <PageHeader title="Tiket Saya" description="Tiket QR dari pesanan yang sudah dibayar akan muncul di sini." />
       <div className="mt-4 rounded-xl border border-lelampahan-gold/20 bg-lelampahan-cream/70 p-4 text-sm text-lelampahan-earth">
-        Tunjukkan kode tiket ini saat check-in di lokasi pengalaman.
+        Tunjukkan QR code ini saat check-in di lokasi pengalaman.
       </div>
 
       <div className="mt-6">
@@ -44,10 +46,18 @@ export default async function TicketWalletPage() {
                         {new Date(session.startsAt).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                       <p className="text-sm text-gray-500">{ticketTypeName}</p>
+                      <StatusBadge status={getStatusVariant(ticket.status)} label={formatTicketStatusLabel(ticket.status)} />
                     </div>
-                    <div className="rounded-xl border border-dashed border-lelampahan-gold bg-white px-4 py-3 text-center">
-                      <StatusBadge status={getStatusVariant(ticket.status)} label={ticket.status} />
-                      <p className="mt-2 font-mono text-sm font-semibold text-lelampahan-earth">{ticket.code}</p>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="rounded-xl border border-dashed border-lelampahan-gold bg-white p-3">
+                        <QRCodeSVG
+                          value={ticket.code}
+                          size={150}
+                          level="M"
+                          includeMargin
+                        />
+                      </div>
+                      <p className="font-mono text-xs text-gray-500">{ticket.code}</p>
                     </div>
                   </div>
                 </Card>
