@@ -59,6 +59,15 @@ export async function findTicketsByOrder(orderId: string) {
   });
 }
 
+export async function findActiveTicketCountByUser(userId: string) {
+  return prisma.ticket.count({
+    where: {
+      order: { userId },
+      status: 'ISSUED',
+    },
+  });
+}
+
 export async function recordCheckIn(data: {
   ticketId: string;
   staffId: string;
