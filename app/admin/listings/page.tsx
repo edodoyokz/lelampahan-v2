@@ -5,6 +5,8 @@ import { DataTable, type Column } from '@/components/ui/data-table';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 
 interface AdminListing {
   id: string;
@@ -27,6 +29,7 @@ export default function AdminListingPage() {
   const [modalAction, setModalAction] = useState<ModalAction>('approve');
   const [selectedListing, setSelectedListing] = useState<AdminListing | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const loadListings = async () => {
     setLoading(true);
@@ -191,12 +194,24 @@ export default function AdminListingPage() {
     </div>
   );
 
+  const filteredListings = statusFilter === 'ALL' ? listings : listings.filter((listing) => listing.status === statusFilter);
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Review Pengalaman</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Tinjau pengalaman yang menunggu persetujuan.
-      </p>
+      <PageHeader title="Review Pengalaman" description="Tinjau pengalaman yang menunggu persetujuan." />
+
+      <div className="mt-6">
+        <StatusFilterTabs
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { label: 'Semua', value: 'ALL' },
+            { label: 'Review', value: 'PENDING_REVIEW' },
+            { label: 'Terbit', value: 'PUBLISHED' },
+            { label: 'Ditolak', value: 'REJECTED' },
+          ]}
+        />
+      </div>
 
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
@@ -205,7 +220,7 @@ export default function AdminListingPage() {
       <div className="mt-6">
         <DataTable
           columns={columns}
-          data={listings}
+          data={filteredListings}
           loading={loading}
           emptyState={{
             title: 'Tidak ada item yang menunggu review',

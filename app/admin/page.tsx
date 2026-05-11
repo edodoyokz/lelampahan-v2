@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { formatIDR } from '@/lib/format-currency';
+import { PageHeader } from '@/components/ui/page-header';
+import { QuickActionCard } from '@/components/ui/quick-action-card';
 
 interface DashboardStats {
   totalPartners: number;
@@ -144,10 +146,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Admin Dashboard</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Ringkasan data platform Lelampahan.
-      </p>
+      <PageHeader title="Admin Dashboard" description="Ringkasan data platform Lelampahan." />
 
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
@@ -175,6 +174,12 @@ export default function AdminDashboard() {
                 </Card>
               );
             })}
+      </div>
+
+      <h2 className="mt-10 text-lg font-semibold text-lelampahan-earth">Antrean Review</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <QuickActionCard title="Review Partner" description="Tinjau pendaftaran partner baru." href="/admin/partners" />
+        <QuickActionCard title="Review Pengalaman" description="Tinjau pengalaman yang menunggu persetujuan." href="/admin/listings" />
       </div>
     </div>
   );

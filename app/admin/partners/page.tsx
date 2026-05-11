@@ -5,6 +5,8 @@ import { DataTable, type Column } from '@/components/ui/data-table';
 import { StatusBadge, getStatusVariant } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusFilterTabs } from '@/components/ui/status-filter-tabs';
 
 interface PartnerCapability {
   type: string;
@@ -31,6 +33,7 @@ export default function AdminPartnerPage() {
   const [error, setError] = useState('');
   const [modalAction, setModalAction] = useState<ModalAction>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   const loadPartners = useCallback(async () => {
     setLoading(true);
@@ -192,10 +195,24 @@ export default function AdminPartnerPage() {
     </div>
   );
 
+  const filteredPartners = statusFilter === 'ALL' ? partners : partners.filter((partner) => partner.status === statusFilter);
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-lelampahan-earth">Persetujuan Partner</h1>
-      <p className="mt-1 text-sm text-gray-500">Tinjau dan setujui pendaftaran partner baru.</p>
+      <PageHeader title="Persetujuan Partner" description="Tinjau dan setujui pendaftaran partner baru." />
+
+      <div className="mt-6">
+        <StatusFilterTabs
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { label: 'Semua', value: 'ALL' },
+            { label: 'Review', value: 'PENDING_REVIEW' },
+            { label: 'Disetujui', value: 'APPROVED' },
+            { label: 'Ditolak', value: 'REJECTED' },
+          ]}
+        />
+      </div>
 
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>
@@ -204,7 +221,7 @@ export default function AdminPartnerPage() {
       <div className="mt-6">
         <DataTable
           columns={columns}
-          data={partners}
+          data={filteredPartners}
           loading={loading}
           emptyState={{
             title: 'Tidak ada item yang menunggu review',
