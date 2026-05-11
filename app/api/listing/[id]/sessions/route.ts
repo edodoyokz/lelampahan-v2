@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { findSessionsByListing, replaceListingSessions } from '@/data/session';
-import { requireApiUser } from '@/lib/auth/api';
+import { requireListingOwnership } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: Request, { params }: Props) {
+export async function GET(request: Request, { params }: Props) {
   try {
     const { id } = await params;
+    const auth = await requireListingOwnership(request, id);
+    if (auth.response) return auth.response;
+
     const sessions = await findSessionsByListing(id);
     return NextResponse.json({ sessions, total: sessions.length });
   } catch (error) {
@@ -38,10 +41,9 @@ const replaceSchema = z.object({
 
 export async function PUT(request: Request, { params }: Props) {
   try {
-    const auth = await requireApiUser(request);
-    if (auth.response) return auth.response;
-
     const { id } = await params;
+    const auth = await requireListingOwnership(request, id);
+    if (auth.response) return auth.response;
     const body = await parseBody(request);
     const input = replaceSchema.parse(body);
 
