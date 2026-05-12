@@ -53,9 +53,11 @@ export function PartnerShell({ children, userLabel, partnerName }: PartnerShellP
         title="Portal Partner"
         mobileVariant="bottom-nav"
       />
-      <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6">
+      <main className="flex-1 min-w-0 p-4 pb-20 sm:p-6 lg:p-8">
         <DashboardTopbar title="Dashboard Partner" userLabel={userLabel} role="PARTNER" partnerName={partnerName} />
-        {children}
+        <div className="bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );

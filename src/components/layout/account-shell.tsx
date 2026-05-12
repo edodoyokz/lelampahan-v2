@@ -86,7 +86,7 @@ export function AccountShell({ children, userLabel }: AccountShellProps) {
       <DashboardTopbar title="Dashboard Akun" userLabel={userLabel} role="CUSTOMER" />
       {/* Mobile: Horizontal tab navigation above content */}
       <nav
-        className="mb-6 flex gap-1 overflow-x-auto border-b border-gray-200 md:hidden"
+        className="mb-6 flex gap-2 overflow-x-auto p-1 md:hidden no-scrollbar bg-white/40 backdrop-blur-md rounded-2xl border border-white/50"
         aria-label="Account navigation"
       >
         {accountNavItems.map((item) => {
@@ -96,11 +96,11 @@ export function AccountShell({ children, userLabel }: AccountShellProps) {
               key={item.href}
               href={item.href}
               className={`
-                flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm transition-colors duration-150
+                flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm transition-all duration-300
                 ${
                   active
-                    ? 'border-lelampahan-gold text-lelampahan-earth font-semibold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-lelampahan-gold/20 text-lelampahan-brick font-semibold shadow-sm'
+                    : 'text-gray-500 hover:text-lelampahan-earth hover:bg-white/50'
                 }
               `.trim()}
               aria-current={active ? 'page' : undefined}
@@ -125,11 +125,11 @@ export function AccountShell({ children, userLabel }: AccountShellProps) {
                   key={item.href}
                   href={item.href}
                   className={`
-                    flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors duration-150
+                    flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-300
                     ${
                       active
-                        ? 'bg-lelampahan-cream text-lelampahan-earth font-semibold'
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-gradient-to-r from-lelampahan-gold/20 to-transparent text-lelampahan-brick font-semibold border-l-4 border-lelampahan-gold shadow-sm'
+                        : 'text-gray-600 hover:bg-white/50 hover:text-lelampahan-earth hover:translate-x-1 border-l-4 border-transparent'
                     }
                   `.trim()}
                   aria-current={active ? 'page' : undefined}
@@ -145,7 +145,9 @@ export function AccountShell({ children, userLabel }: AccountShellProps) {
         </aside>
 
         {/* Main content area */}
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 p-4 sm:p-6 lg:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

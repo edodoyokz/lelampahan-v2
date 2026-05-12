@@ -36,9 +36,11 @@ export function AdminShell({ children, role = 'ADMIN', userLabel }: AdminShellPr
   return (
     <div className="flex min-h-screen">
       <SidebarNavigation items={items} currentPath={pathname} title="Admin" mobileVariant="drawer" />
-      <main className="flex-1 min-w-0 p-6">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
         <DashboardTopbar title="Admin Dashboard" userLabel={userLabel} role={role} />
-        {children}
+        <div className="bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );

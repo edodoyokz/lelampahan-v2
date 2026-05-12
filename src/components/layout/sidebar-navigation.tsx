@@ -85,7 +85,7 @@ export function SidebarNavigation({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:block w-56 shrink-0" aria-label="Sidebar navigation">
+      <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white/60 backdrop-blur-2xl border-r border-white/50 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)] min-h-screen" aria-label="Sidebar navigation">
         {title && (
           <h2 className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
             {title}
@@ -99,11 +99,11 @@ export function SidebarNavigation({
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors duration-150
+                  flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-300
                   ${
                     active
-                      ? 'bg-lelampahan-cream text-lelampahan-earth font-semibold'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-lelampahan-gold/20 to-transparent text-lelampahan-brick font-semibold border-l-4 border-lelampahan-gold shadow-sm'
+                      : 'text-gray-600 hover:bg-white/50 hover:text-lelampahan-earth hover:translate-x-1 border-l-4 border-transparent'
                   }
                 `.trim()}
                 aria-current={active ? 'page' : undefined}
@@ -121,7 +121,7 @@ export function SidebarNavigation({
       {/* Mobile: Bottom navigation bar */}
       {mobileVariant === 'bottom-nav' && (
         <nav
-          className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t bg-white px-2 py-2 md:hidden"
+          className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-white/40 bg-white/70 backdrop-blur-xl px-2 py-2 pb-safe shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)] md:hidden"
           aria-label="Mobile navigation"
         >
           {items.map((item) => {
@@ -131,11 +131,11 @@ export function SidebarNavigation({
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex flex-col items-center gap-0.5 rounded-md px-3 py-1.5 text-xs transition-colors duration-150
+                  flex flex-col items-center gap-1 rounded-xl px-4 py-2 text-xs transition-all duration-300
                   ${
                     active
-                      ? 'text-lelampahan-earth font-semibold'
-                      : 'text-gray-500'
+                      ? 'bg-lelampahan-gold/10 text-lelampahan-brick font-semibold scale-105'
+                      : 'text-gray-500 hover:bg-white/50 hover:text-lelampahan-earth'
                   }
                 `.trim()}
                 aria-current={active ? 'page' : undefined}
@@ -156,7 +156,7 @@ export function SidebarNavigation({
           {/* Hamburger toggle button */}
           <button
             type="button"
-            className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-lelampahan-gold text-white shadow-lg md:hidden"
+            className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-lelampahan-gold text-white shadow-lg shadow-lelampahan-gold/30 transition-transform hover:scale-105 active:scale-95 md:hidden"
             onClick={() => setDrawerOpen(true)}
             aria-label="Open navigation menu"
           >
@@ -189,7 +189,7 @@ export function SidebarNavigation({
               {/* Drawer panel */}
               <div
                 ref={drawerRef}
-                className="fixed top-0 left-0 h-full w-72 max-w-[80vw] bg-white shadow-lg overflow-y-auto animate-slide-in-left"
+                className="fixed top-0 left-0 h-full w-72 max-w-[80vw] bg-white/80 backdrop-blur-2xl shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] border-r border-white/50 overflow-y-auto animate-slide-in-left"
               >
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   {title && (
@@ -228,11 +228,11 @@ export function SidebarNavigation({
                         key={item.href}
                         href={item.href}
                         className={`
-                          flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors duration-150
+                          flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-300
                           ${
                             active
-                              ? 'bg-lelampahan-cream text-lelampahan-earth font-semibold'
-                              : 'text-gray-600 hover:bg-gray-100'
+                              ? 'bg-gradient-to-r from-lelampahan-gold/20 to-transparent text-lelampahan-brick font-semibold border-l-4 border-lelampahan-gold shadow-sm'
+                              : 'text-gray-600 hover:bg-white/50 hover:text-lelampahan-earth hover:translate-x-1 border-l-4 border-transparent'
                           }
                         `.trim()}
                         aria-current={active ? 'page' : undefined}

@@ -12,7 +12,7 @@ interface DashboardTopbarProps {
 
 export function DashboardTopbar({ title, userLabel, role, partnerName }: DashboardTopbarProps) {
   return (
-    <header className="mb-6 flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <header className="sticky top-0 z-30 mb-6 flex flex-col gap-3 border-b border-white/40 bg-white/50 backdrop-blur-md px-2 py-3 sm:px-4 sm:flex-row sm:items-center sm:justify-between rounded-b-2xl shadow-sm">
       <div>
         <Link href="/" className="text-sm font-medium text-lelampahan-gold hover:text-lelampahan-brick">
           ← Marketplace
