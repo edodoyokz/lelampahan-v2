@@ -157,7 +157,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <section aria-label="Galeri gambar pengalaman">
           <div className="relative aspect-video w-full rounded-xl bg-gray-100 border border-gray-200 overflow-hidden">
             {imageUrl ? (
-              <Image src={imageUrl} alt={coverImage?.alt ?? listing.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 1024px" />
+              <Image src={imageUrl} alt={coverImage?.alt ?? listing.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 1024px" priority />
             ) : (
               <div className="text-center text-gray-400">
                 <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
@@ -283,7 +283,7 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
 
           {/* Right Column - Session Picker & Partner Info */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-24 lg:h-fit">
             {/* Session Picker */}
             <Card variant="elevated" padding="md">
               <h2 className="text-lg font-semibold text-lelampahan-earth mb-4">Pilih Jadwal</h2>

@@ -28,7 +28,7 @@ export function ListingCard({
   return (
     <Link
       href={`/l/${slug}`}
-      className="group block overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+      className="group block overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
       {/* Image section with 16:9 aspect ratio */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
