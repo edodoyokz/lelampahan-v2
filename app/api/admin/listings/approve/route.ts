@@ -4,6 +4,8 @@ import { updateListingStatus } from '@/data/listing';
 import { recordAuditLog } from '@/data/audit';
 import { requireApiAdmin } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
+import { sendListingApprovedEmail } from '@/lib/email';
+import { prisma } from '@/db/prisma';
 
 const actionSchema = z.object({
   listingId: z.string().min(1),
@@ -27,6 +29,29 @@ export async function POST(request: Request) {
       entityId: input.listingId,
       metadata: { status },
     });
+
+    // Send email notification to partner when listing is approved
+    if (input.action === 'approve') {
+      const partnerWithMember = await prisma.partner.findUnique({
+        where: { id: listing.partnerId },
+        include: {
+          memberships: {
+            include: { user: { select: { email: true, name: true } } },
+            orderBy: { createdAt: 'asc' },
+            take: 1,
+          },
+        },
+      });
+      const ownerEmail = partnerWithMember?.memberships[0]?.user.email;
+      if (ownerEmail) {
+        sendListingApprovedEmail({
+          to: ownerEmail,
+          partnerName: partnerWithMember?.name ?? 'Partner',
+          listingTitle: listing.title,
+          listingSlug: listing.slug,
+        }).catch(() => {/* non-fatal */});
+      }
+    }
 
     return NextResponse.json({ listing, status, timestamp: new Date().toISOString() });
   } catch (error) {

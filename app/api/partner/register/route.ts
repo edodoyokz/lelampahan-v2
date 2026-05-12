@@ -3,6 +3,7 @@ import { partnerRegistrationSchema } from '@/domain/partner/validation';
 import { createPartnerInDb, ensurePartnerOwnerMembership } from '@/data/partner';
 import { requireApiUser } from '@/lib/auth/api';
 import { handleApiError, parseBody } from '@/lib/errors';
+import { sendPartnerRegistrationEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,16 @@ export async function POST(request: Request) {
           : partner.name,
       partnerId: partner.id,
     });
+
+    // Notify partner via email (fire-and-forget)
+    sendPartnerRegistrationEmail({
+      to: input.contactEmail,
+      partnerName: partner.name,
+      contactName:
+        typeof auth.user.user_metadata?.full_name === 'string'
+          ? auth.user.user_metadata.full_name
+          : partner.name,
+    }).catch(() => {/* non-fatal */});
 
     return NextResponse.json(partner, { status: 201 });
   } catch (error) {

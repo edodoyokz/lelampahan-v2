@@ -18,6 +18,13 @@ export async function createRefundRequest(input: {
   });
 }
 
+export async function findRefundRequestById(id: string) {
+  return prisma.refundRequest.findUnique({
+    where: { id },
+    include: { order: true },
+  });
+}
+
 export async function updateRefundRequestStatus(id: string, status: RefundRequestStatus) {
   return prisma.refundRequest.update({
     where: { id },
@@ -29,6 +36,6 @@ export async function listRefundRequests(status?: RefundRequestStatus) {
   return prisma.refundRequest.findMany({
     where: status ? { status } : undefined,
     orderBy: { createdAt: 'desc' },
-    include: { order: true },
+    include: { order: { include: { session: { include: { listing: { select: { title: true } } } } } } },
   });
 }

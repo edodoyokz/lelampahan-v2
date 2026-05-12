@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck, ClipboardList, Compass, X } from 'lucide-react';
+import { CalendarCheck, Compass, X } from 'lucide-react';
 import { useListingForm, type ListingFormData } from '@/hooks/use-listing-form';
 import { formatBookingModeLabel, formatListingTypeLabel } from '@/lib/status-labels';
 
@@ -149,32 +149,15 @@ export function ListingForm({ form, onSubmit, submitLabel = 'Buat Listing' }: Li
               <button
                 type="button"
                 onClick={() => setBookingMode('INSTANT_CONFIRMATION')}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  bookingMode === 'INSTANT_CONFIRMATION'
-                    ? 'bg-lelampahan-gold text-white'
-                    : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
+                className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-lelampahan-gold text-white"
+                aria-pressed="true"
               >
                 <CalendarCheck className="h-4 w-4" aria-hidden="true" />
                 {formatBookingModeLabel('INSTANT_CONFIRMATION')}
               </button>
-              <button
-                type="button"
-                onClick={() => setBookingMode('REQUEST_TO_BOOK')}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  bookingMode === 'REQUEST_TO_BOOK'
-                    ? 'bg-lelampahan-gold text-white'
-                    : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <ClipboardList className="h-4 w-4" aria-hidden="true" />
-                {formatBookingModeLabel('REQUEST_TO_BOOK')}
-              </button>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              {bookingMode === 'INSTANT_CONFIRMATION'
-                ? 'Pesanan otomatis diterima setelah pembayaran berhasil.'
-                : 'Anda perlu menyetujui pesanan sebelum peserta dapat membayar.'}
+              Pesanan otomatis diterima setelah pembayaran berhasil.
             </p>
           </div>
         </div>

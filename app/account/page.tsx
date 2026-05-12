@@ -5,6 +5,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { QuickActionCard } from '@/components/ui/quick-action-card';
 import { findOrderCountByUser, findPendingPaymentOrderCountByUser } from '@/data/order';
 import { findActiveTicketCountByUser } from '@/data/ticket';
+import { prisma } from '@/db/prisma';
 
 export default async function AccountProfilePage() {
   const user = await getCurrentUser();
@@ -19,10 +20,18 @@ export default async function AccountProfilePage() {
     user.email?.split('@')[0] ||
     'Pengguna';
 
+  // Order.userId stores UserProfile.id (cuid), not Supabase auth UUID.
+  // Resolve the profile id first so stat queries return correct counts.
+  const profile = await prisma.userProfile.findUnique({
+    where: { authUserId: user.id },
+    select: { id: true },
+  });
+  const profileId = profile?.id ?? '';
+
   const [totalOrders, activeTickets, pendingPayments] = await Promise.all([
-    findOrderCountByUser(user.id),
-    findActiveTicketCountByUser(user.id),
-    findPendingPaymentOrderCountByUser(user.id),
+    profileId ? findOrderCountByUser(profileId) : Promise.resolve(0),
+    profileId ? findActiveTicketCountByUser(profileId) : Promise.resolve(0),
+    profileId ? findPendingPaymentOrderCountByUser(profileId) : Promise.resolve(0),
   ]);
 
   return (
@@ -49,6 +58,7 @@ export default async function AccountProfilePage() {
           {pendingPayments > 0 && (
             <QuickActionCard title="Lanjutkan Pembayaran" description="Selesaikan pesanan yang masih menunggu pembayaran." href="/account/orders" />
           )}
+          <QuickActionCard title="Daftar sebagai Partner" description="Tawarkan tur atau acara Anda di Lelampahan." href="/partner/register" />
         </div>
       </div>
 

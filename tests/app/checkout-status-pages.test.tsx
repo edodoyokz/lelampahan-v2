@@ -22,7 +22,7 @@ describe('Checkout status pages', () => {
 
     expect(screen.getByText('Pembayaran Gagal')).toBeInTheDocument();
     expect(screen.getByText(/Transaksi belum berhasil diproses/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ulangi Checkout' })).toHaveAttribute('href', '/checkout');
+    expect(screen.getByRole('link', { name: 'Lihat Pesanan Saya' })).toHaveAttribute('href', '/account/orders');
     expect(screen.getByRole('link', { name: 'Kembali ke Marketplace' })).toHaveAttribute('href', '/');
   });
 

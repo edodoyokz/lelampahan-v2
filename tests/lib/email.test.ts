@@ -39,17 +39,16 @@ describe('email service', () => {
     expect(result.messageId).toBe('email-123');
   });
 
-  it('throws on missing recipient', async () => {
-    await expect(
-      sendTicketEmail({
-        to: '',
-        subject: 'Test',
-        ticketCode: 'TICKET-001',
-        orderNumber: 'LM-001',
-        participantName: 'Test',
-        listingTitle: 'Test',
-        qrToken: 'token',
-      }),
-    ).rejects.toThrow('Email recipient is required');
+  it('returns false on missing recipient instead of throwing', async () => {
+    const result = await sendTicketEmail({
+      to: '',
+      subject: 'Test',
+      ticketCode: 'TICKET-001',
+      orderNumber: 'LM-001',
+      participantName: 'Test',
+      listingTitle: 'Test',
+      qrToken: 'token',
+    });
+    expect(result.success).toBe(false);
   });
 });

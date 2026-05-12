@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getPaymentProvider } from '@/domain/payment/factory';
-import { createPaymentRecord, findPendingPaymentOrderForUser } from '@/data/payment';
+import { upsertPaymentRecord, findPendingPaymentOrderForUser } from '@/data/payment';
 import { ensureUserProfileForAuthUser } from '@/data/user';
 import { DomainError } from '@/domain/shared/errors';
 import { requireApiUser } from '@/lib/auth/api';
@@ -43,7 +43,9 @@ export async function POST(request: Request) {
       orderNumber: order.orderNumber,
     });
 
-    const persisted = await createPaymentRecord({
+    // upsertPaymentRecord handles the case where a previous EXPIRED/FAILED payment
+    // exists for this order, allowing the customer to retry checkout safely.
+    const persisted = await upsertPaymentRecord({
       orderId: order.id,
       provider: paymentResult.provider,
       method: paymentResult.method,

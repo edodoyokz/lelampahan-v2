@@ -2,6 +2,7 @@ import { OrderStatus, Prisma, ReservationStatus } from '@prisma/client';
 import { prisma } from '@/db/prisma';
 import { DomainError } from '@/domain/shared/errors';
 import { ensureCapacityAvailable } from '@/domain/booking/reservation-policy';
+import { assertOrderTransition, type OrderState } from '@/domain/booking/state-machine';
 
 export async function createOrder(data: {
   orderNumber: string;
@@ -239,9 +240,13 @@ export async function getPartnerBookingSummary(partnerId: string) {
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
-  return prisma.order.update({
-    where: { id },
-    data: { status },
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id }, select: { status: true } });
+    if (!order) {
+      throw new DomainError('ORDER_NOT_FOUND', 'Order not found');
+    }
+    assertOrderTransition(order.status as OrderState, status as OrderState);
+    return tx.order.update({ where: { id }, data: { status } });
   });
 }
 
@@ -255,6 +260,60 @@ export async function expireStaleReservations(now: Date = new Date()) {
   });
 }
 
+/**
+ * Mark orders as EXPIRED when their linked reservation has expired.
+ * Should be called after expireStaleReservations in the cron job.
+ */
+export async function expireOrdersWithExpiredReservations(now: Date = new Date()) {
+  return prisma.order.updateMany({
+    where: {
+      status: OrderStatus.PENDING_PAYMENT,
+      reservation: {
+        status: ReservationStatus.EXPIRED,
+        expiresAt: { lte: now },
+      },
+    },
+    data: { status: OrderStatus.EXPIRED },
+  });
+}
+
+/**
+ * Cancel an order that is in PENDING_PAYMENT or DRAFT state.
+ * Releases the linked reservation back to RELEASED so capacity is freed.
+ */
+export async function cancelOrderAndReleaseReservation(orderId: string, userId: string) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId, userId },
+      include: { reservation: true },
+    });
+
+    if (!order) {
+      throw new DomainError('ORDER_NOT_FOUND', 'Order not found');
+    }
+
+    const cancellableStatuses: OrderStatus[] = [OrderStatus.PENDING_PAYMENT, OrderStatus.DRAFT];
+    if (!cancellableStatuses.includes(order.status)) {
+      throw new DomainError(
+        'ORDER_NOT_CANCELLABLE',
+        'Only orders in PENDING_PAYMENT or DRAFT status can be cancelled',
+      );
+    }
+
+    if (order.reservation && order.reservation.status === ReservationStatus.ACTIVE) {
+      await tx.reservation.update({
+        where: { id: order.reservation.id },
+        data: { status: ReservationStatus.RELEASED },
+      });
+    }
+
+    return tx.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.CANCELLED },
+    });
+  });
+}
+
 export async function markOrderPaidAndConsumeReservation(orderId: string) {
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
@@ -264,6 +323,21 @@ export async function markOrderPaidAndConsumeReservation(orderId: string) {
 
     if (!order) {
       throw new DomainError('ORDER_NOT_FOUND', 'Order not found');
+    }
+
+    // Idempotency guard: if already paid, return without side effects
+    if (order.status === OrderStatus.PAID) {
+      return { ...order, partnerId: order.session.listing.partnerId };
+    }
+
+    // Guard: if reservation already expired, the seat may have been re-sold.
+    // Move to NEEDS_ADMIN_REVIEW instead of silently marking paid.
+    if (order.reservation && order.reservation.status === ReservationStatus.EXPIRED) {
+      const reviewOrder = await tx.order.update({
+        where: { id: orderId },
+        data: { status: OrderStatus.NEEDS_ADMIN_REVIEW },
+      });
+      return { ...reviewOrder, partnerId: order.session.listing.partnerId };
     }
 
     if (order.reservation?.status === ReservationStatus.ACTIVE) {

@@ -6,6 +6,13 @@ const getCurrentUser = vi.fn();
 const redirect = vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`); });
 
 vi.mock('@/lib/supabase/client', () => ({ getCurrentUser: () => getCurrentUser() }));
+vi.mock('@/db/prisma', () => ({
+  prisma: {
+    userProfile: {
+      findUnique: vi.fn().mockResolvedValue({ id: 'profile-123' }),
+    },
+  },
+}));
 vi.mock('@/data/order', () => ({
   findOrderCountByUser: vi.fn().mockResolvedValue(3),
   findPendingPaymentOrderCountByUser: vi.fn().mockResolvedValue(1),
